@@ -19,7 +19,7 @@ s = Simulation(basedir,f,nside,maps)
 
 s.run_pinocchio()
 
-#s.convert_healpix(8192)
+s.convert_healpix()
 
-#s.add_noise()
+s.add_noise()
 
