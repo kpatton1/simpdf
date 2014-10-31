@@ -12,6 +12,9 @@ PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME='test'
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_NSIDE=8192
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS={'test':(4096,384,110,(-1.0e15,10.0e15))}
 
+PINOCCHIO_CORE_SIMPARAMS_DEFAULT_ZPLC=0.6
+PINOCCHIO_CORE_SIMPARAMS_DEFAULT_BOXSIZE=1600.0
+PINOCCHIO_CORE_SIMPARAMS_DEFAULT_GRIDSIZE=800
 
 import os
 import sys
@@ -19,6 +22,13 @@ import numpy
 import subprocess
 
 from cosmology import Cosmology
+
+class SimParams:
+
+    def __init__(self, zplc=PINOCCHIO_CORE_SIMPARAMS_DEFAULT_ZPLC, boxsize=PINOCCHIO_CORE_SIMPARAMS_DEFAULT_BOXSIZE, gridsize=PINOCCHIO_CORE_SIMPARAMS_DEFAULT_GRIDSIZE):
+        self.zplc = zplc
+        self.boxsize = boxsize
+        self.gridsize = gridsize
 
 class Survey:
 
@@ -111,6 +121,7 @@ class Simulation:
         self.cosmo = Cosmology(name=cname)
         self.survey = Survey(name=sname)
         self.analysis = Analysis(name=aname,nside=nside,pdfs=pdfs)
+        self.simparams = SimParams()
 
         if param == 'h':
             self.cosmo.h = val
@@ -172,7 +183,7 @@ class Simulation:
                     
             if not os.path.exists('parameters') or not os.path.exists('outputs'):
                 self.cosmo.seed = i
-                generate_parameter_files(self.cosmo, self.cosmo.name + '_' + rundir)
+                generate_parameter_files(self.cosmo, self.cosmo.name + '_' + rundir,self.simparams)
 
             if not os.path.exists('parameters') or not os.path.exists('outputs'):
                 print 'Pinocchio error! could not create parameter files'
@@ -400,7 +411,7 @@ class Simulation:
     def plot_analysis(self):
         pass
 
-def generate_parameter_files(cosmo,name):
+def generate_parameter_files(cosmo,name,simparams):
 
     print 'Generating config file, name: ' + name + '  seed: ' + str(cosmo.seed)
 
@@ -418,13 +429,14 @@ def generate_parameter_files(cosmo,name):
     output+= 'DEw1 ' + str(cosmo.w1) + '\n'
 
     output+= 'RandomSeed ' + str(cosmo.seed) + '\n'
+    
+    output+= 'BoxSize ' + str(simparams.boxsize) + '\n'
+    output+= 'GridSize ' + str(simparams.gridsize) + '\n'
+    output+= 'StartingzForPLC ' + str(simparams.zplc) + '\n'
 
     extra_output = '''OutputList outputs
 TabulatedEoSfile no
-BoxSize 2400.0
-GridSize 800
 CatalogInAscii
-StartingzForPLC 0.6
 FileWithInputSpectrum no
 InputSpectrum_UnitLength_in_cm 0
 WDM_PartMass_in_kev 0.0
