@@ -255,11 +255,11 @@ class Simulation:
 
         os.chdir(self.basedir)
 
-        if not os.path.exists(self.name):
-            print 'Noise error! simulation dir does not exist: ' + self.name
+        if not os.path.exists(self.cosmo.name):
+            print 'Noise error! simulation dir does not exist: ' + self.cosmo.name
             return
         
-        os.chdir(self.name)
+        os.chdir(self.cosmo.name)
 
         workingdir = os.getcwd()
         
@@ -523,9 +523,9 @@ def add_noise(infile,outfile,cosmo,survey,analysis):
     zl = survey.zl
     zs = survey.zs
 
-    dl = s.cosmo.Da(zl)
-    ds = s.cosmo.Da(zs)
-    dls = s.cosmo.Da_rel(zl,zs)
+    dl = cosmo.Da(zl)
+    ds = cosmo.Da(zs)
+    dls = cosmo.Da_rel(zl,zs)
 
     e_crit = cosmo.c * cosmo.c * ds / (4.0 * numpy.pi * cosmo.G * dls * dl) # [Msolar / Mpc^2]
 
@@ -537,14 +537,16 @@ def add_noise(infile,outfile,cosmo,survey,analysis):
 
     n_gal = survey.ng
 
+#    nside = analysis.nside
+
+    map_data = healpy.fitsfunc.read_map(infile, dtype=numpy.float32)
+
+    nside = healpy.pixelfunc.get_nside(map_data)
+
     pixelarea = healpy.pixelfunc.nside2pixarea(nside)  * 180.0 / numpy.pi * 180.0 / numpy.pi * 60.0 * 60.0
     
     sigma = survey.q * survey.e * e_crit * pixelarea / numpy.sqrt(8.0 * numpy.pi * numpy.pi * n_gal * pixelarea)
-    
-    map_data = healpy.fitsfunc.read_map(infile)
-
-    nside = healpy.pixelfunc.get_map_size(map_data)
-    
+        
     map_data = map_data + sigma * numpy.random.randn(12*nside*nside)
     
     healpy.fitsfunc.write_map(outfile, map_data)
