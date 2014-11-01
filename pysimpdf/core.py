@@ -20,6 +20,7 @@ import os
 import sys
 import numpy
 import subprocess
+import healpy
 
 from cosmology import Cosmology
 
