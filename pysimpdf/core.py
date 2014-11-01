@@ -99,7 +99,7 @@ class Simulation:
     def __init__(self,basedir,t,nside,pdfs):
         
         if os.path.exists(basedir):
-            os.chdir(self.basedir)
+            os.chdir(basedir)
             self.basedir = os.getcwd()
         else:
             self.basedir = ''
