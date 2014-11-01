@@ -99,11 +99,9 @@ class Simulation:
 
     def __init__(self,basedir,t,nside,pdfs):
         
-        if os.path.exists(basedir):
-            os.chdir(basedir)
-            self.basedir = os.getcwd()
-        else:
-            self.basedir = ''
+        
+        self.cwd = os.getcwd()
+        self.basedir = basedir
         
         self.t = t
 
@@ -156,6 +154,8 @@ class Simulation:
             
     def run_pinocchio(self):
         
+        os.chdir(self.cwd)
+        
         if not os.path.exists(self.basedir):
             print 'Pinocchio error! basedir does not exist: ' + self.basedir
             return
@@ -204,7 +204,11 @@ class Simulation:
                 print 'Pinocchio error! could not generate output: ' + str(pinocchio_output)
                 return
 
+        os.chdir(self.cwd)
+
     def convert_healpix(self):
+        
+        os.chdir(self.cwd)
 
         if not os.path.exists(self.basedir):
             print 'Healpix error! basedir does not exist: ' + self.basedir
@@ -245,9 +249,14 @@ class Simulation:
             if not os.path.exists(healpix_output):
                 print 'Healpix error! could not generate: ' + str(healpix_output)
                 return
+        
+        os.chdir(self.cwd)
+        
 
 
     def add_noise(self):
+        
+        os.chdir(self.cwd)
 
         if not os.path.exists(self.basedir):
             print 'Noise error! basedir does not exist: ' + self.basedir
@@ -289,6 +298,8 @@ class Simulation:
                 if not os.path.exists(noise_output):
                     print 'Noise error! could not generate: ' + str(noise_output)
                     continue
+                        
+        os.chdir(self.cwd)
 
     def generate_covariances(self):
         for t in self.types:
