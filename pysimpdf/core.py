@@ -237,7 +237,7 @@ class Simulation:
                 print 'Healpix error! pinocchio output does not exist: ' + pinocchio_output
                 return
 
-            healpix_output = 'healpix_' + self.cosmo.name + '_' + rundir + '_' + self.analysis.name + ' .fits'
+            healpix_output = 'healpix_' + self.cosmo.name + '_' + rundir + '_' + self.analysis.name + '.fits'
 
             if not os.path.exists(healpix_output):
                 healpixify(pinocchio_output,healpix_output,self.analysis.nside)
@@ -274,7 +274,7 @@ class Simulation:
             
             os.chdir(rundir)
 
-            healpix_output = 'healpix_' + self.cosmo.name + '_' + rundir + '_' + self.analysis.name + ' .fits'
+            healpix_output = 'healpix_' + self.cosmo.name + '_' + rundir + '_' + self.analysis.name + '.fits'
                 
             if not os.path.exists(healpix_output):
                 print 'Noise error! healpix output does not exist: ' + str(healpix_output)
