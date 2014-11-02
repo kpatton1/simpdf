@@ -6,7 +6,7 @@ import os.path
 
 from pysimpdf.core import Simulation
 
-def covert_files(s):
+def convert_filenames(s):
     
     cwd = os.getcwd()
     
@@ -89,4 +89,4 @@ for i in l:
     ls.append(Simulation(basedir,i,nside,maps))
 
 for s in ls:
-    convert_files(s)
+    convert_filenames(s)
