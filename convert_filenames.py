@@ -68,6 +68,8 @@ def covert_files(s):
     
     os.chdir(cwd)
 
+maps={4096:(4096,384,110,(-1.0e15,10.0e15))}
+nside=8192
 
 basedir = 'data'
 
