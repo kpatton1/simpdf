@@ -89,4 +89,4 @@ for i in l:
     ls.append(Simulation(basedir,i,nside,maps))
 
 for s in ls:
-    convert_filenames(s)
+    convert_files(s)
