@@ -35,7 +35,7 @@ def convert_filenames(s):
         
         os.chdir(rundir)
 
-        pinocchio_output = 'pinocchio.' + self.cosmo.name + '_' + rundir + '.plc.out'
+        pinocchio_output = 'pinocchio.' + s.cosmo.name + '_' + rundir + '.plc.out'
 
         if not os.path.exists(pinocchio_output):
             print 'Error! pinocchio output does not exist: ' + pinocchio_output
