@@ -4,6 +4,8 @@
 import os
 import os.path
 
+from pysimpdf.core import Simulation
+
 def covert_files(s):
     
     cwd = os.getcwd()
