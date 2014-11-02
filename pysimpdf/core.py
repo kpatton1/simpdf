@@ -99,9 +99,7 @@ class Simulation:
 
     def __init__(self,basedir,t,nside,pdfs):
         
-        
-        self.cwd = os.getcwd()
-        self.basedir = basedir
+        self.basedir = os.path.abspath(basedir)
         
         self.t = t
 
@@ -120,7 +118,7 @@ class Simulation:
         else:
             sname = 'fiducial'
 
-        aname = str(nside)
+        aname = 'fiducial'
 
         self.cosmo = Cosmology(name=cname)
         self.survey = Survey(name=sname)
@@ -154,7 +152,7 @@ class Simulation:
             
     def run_pinocchio(self):
         
-        os.chdir(self.cwd)
+        cwd = os.getcwd()
         
         if not os.path.exists(self.basedir):
             print 'Pinocchio error! basedir does not exist: ' + self.basedir
@@ -204,11 +202,11 @@ class Simulation:
                 print 'Pinocchio error! could not generate output: ' + str(pinocchio_output)
                 return
 
-        os.chdir(self.cwd)
+        os.chdir(cwd)
 
     def convert_healpix(self):
         
-        os.chdir(self.cwd)
+        cwd = os.getcwd()
 
         if not os.path.exists(self.basedir):
             print 'Healpix error! basedir does not exist: ' + self.basedir
@@ -241,22 +239,20 @@ class Simulation:
                 print 'Healpix error! pinocchio output does not exist: ' + pinocchio_output
                 return
 
-            healpix_output = 'healpix_' + self.cosmo.name + '_' + rundir + '_' + self.analysis.name + '.fits'
+            healpix_output = 'healpix_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
 
             if not os.path.exists(healpix_output):
                 healpixify(pinocchio_output,healpix_output,self.analysis.nside)
                 
             if not os.path.exists(healpix_output):
-                print 'Healpix error! could not generate: ' + str(healpix_output)
+                print 'Healpix error! could not generate: ' + healpix_output
                 return
-        
-        os.chdir(self.cwd)
-        
 
+        os.chdir(cwd)
 
     def add_noise(self):
         
-        os.chdir(self.cwd)
+        cwd = os.getcwd()
 
         if not os.path.exists(self.basedir):
             print 'Noise error! basedir does not exist: ' + self.basedir
@@ -283,23 +279,23 @@ class Simulation:
             
             os.chdir(rundir)
 
-            healpix_output = 'healpix_' + self.cosmo.name + '_' + rundir + '_' + self.analysis.name + '.fits'
+            healpix_output = 'healpix_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
                 
             if not os.path.exists(healpix_output):
-                print 'Noise error! healpix output does not exist: ' + str(healpix_output)
+                print 'Noise error! healpix output does not exist: ' + healpix_output
                 return
 
             for j in range(1,self.nnoise+1):
-                noise_output = 'noise_' + self.cosmo.name + '_' + rundir + 'n' + str(j) + '_' + self.analysis.name + '.fits'
+                noise_output = 'noise_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
                 
                 if not os.path.exists(noise_output):
                     add_noise(healpix_output,noise_output,self.cosmo,self.survey,self.analysis)
                     
                 if not os.path.exists(noise_output):
-                    print 'Noise error! could not generate: ' + str(noise_output)
+                    print 'Noise error! could not generate: ' + noise_output
                     continue
-                        
-        os.chdir(self.cwd)
+        
+        os.chdir(cwd)
 
     def generate_covariances(self):
         for t in self.types:
