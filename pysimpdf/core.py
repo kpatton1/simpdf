@@ -336,7 +336,7 @@ class Simulation:
                     if not os.path.exists(cov_output):
                         cov_outputs[key] = cov_output
                 
-                calc_covariances(noise_output, cov_outputs, self.pdfs)
+                calc_covariances(noise_output, cov_outputs, self.analysis.pdfs)
                 
         os.chdir(cwd)
         

@@ -17,7 +17,7 @@ l = t + [f]
 
 print l
 
-maps={4096:(4096,384,110,(-1.0e15,10.0e15))}
+maps={4096:(4096,384,110,(-1.0e15,10.0e15)), 1024:(1024,384,110,(-1.0e15,10.0e15)), 256:(256,384,110,(-1.0e15,10.0e15)), 64:(64,384,110,(-1.0e15,10.0e15))}
 nside=8192
 
 basedir='data'
@@ -34,4 +34,4 @@ for s in ls:
 for s in ls:
     s.convert_healpix()
     s.add_noise()
-
+    s.generate_covariances()
