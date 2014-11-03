@@ -7,8 +7,6 @@ PINOCCHIO_CORE_SURVEY_DEFAULT_ZL=0.4
 PINOCCHIO_CORE_SURVEY_DEFAULT_ZS=0.8
 PINOCCHIO_CORE_SURVEY_DEFAULT_Q=1.0
 
-
-PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME='test'
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_NSIDE=8192
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS={'test':(4096,384,110,(-1.0e15,10.0e15))}
 
@@ -47,8 +45,7 @@ class Survey:
 
 class Analysis:
     
-    def __init__(self, name=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME, nside=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NSIDE, pdfs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS):
-        self.name = name
+    def __init__(self, nside=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NSIDE, pdfs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS):
         self.nside = nside
         self.pdfs = pdfs
 
@@ -118,11 +115,9 @@ class Simulation:
         else:
             sname = 'fiducial'
 
-        aname = 'fiducial'
-
         self.cosmo = Cosmology(name=cname)
         self.survey = Survey(name=sname)
-        self.analysis = Analysis(name=aname,nside=nside,pdfs=pdfs)
+        self.analysis = Analysis(nside=nside,pdfs=pdfs)
         self.simparams = SimParams()
 
         if param == 'h':
@@ -298,128 +293,53 @@ class Simulation:
         os.chdir(cwd)
 
     def generate_covariances(self):
-        for t in self.types:
-            try:
-                d = t[0]
-                p = t[1]
-                v = t[2]
-                r = t[3]
-                n = t[4]
+        
+        cwd = os.getcwd()
+        
+        if not os.path.exists(self.basedir):
+            print 'Covariance error! basedir does not exist: ' + self.basedir
+            return
+        
+        os.chdir(self.basedir)
+        
+        if not os.path.exists(self.cosmo.name):
+            print 'Covariance error! simulation dir does not exist: ' + self.cosmo.name
+            return
+        
+        os.chdir(self.cosmo.name)
+        
+        workingdir = os.getcwd()
+        
+        for i in range(1,self.nsim+1):
+            os.chdir(workingdir)
+            
+            rundir = 'r' + str(i)
+            
+            if not os.path.exists(rundir):
+                print 'Covariance error! rundir does not exist: ' + rundir
+                return
+            
+            os.chdir(rundir)
 
-                os.chdir(self.basedir)
+            for j in range(1,self.nnoise+1):
+                noise_output = 'noise_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
                 
-                name = d
-
-                os.chdir(name)
-
-                workingdir = os.getcwd()
-
-                cov = {}
-                mean = {}
+                if not os.path.exists(noise_output):
+                    print 'Covariance error! noise output does not exist: ' + noise_output
+                    continue
                 
-                cov_adj = {}
-                mean_adj = {}
+                cov_outputs = {}
 
-                for map_size in self.map_sizes:
-                    mean[map_size] = numpy.zeros(self.bins,dtype=numpy.float32)
-                    cov[map_size] = numpy.zeros((self.bins,self.bins),dtype=numpy.float32)
-                    mean_adj[map_size] = numpy.zeros(self.bins,dtype=numpy.float32)
-                    cov_adj[map_size] = numpy.zeros((self.bins,self.bins),dtype=numpy.float32)
-                
-                count = 0.0
-
-                count_adj = 0.0
-
-                for i in range(1,r+1):
-                    os.chdir(workingdir)
-
-                    rundir = 'r' + str(i)
-
-                    if not os.path.exists(rundir):
-                        print 'Covariance error: rundir ' + rundir + ' does not exist'
-                        continue
+                for key in self.analysis.pdfs.keys():
+                    cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '_' + rundir + 'n' + str(j) + '.npz'
                     
-                    os.chdir(rundir)
-
-                    healpix_output = 'healpix.fits'
-    
-                    if not os.path.exists(healpix_output):
-                        print 'Covariance error: healpix output ' + str(healpix_output) + ' does not exist'
-                        continue
-
-                    for j in range(1,n+1):
-                        noise_output = rundir + 'n' + str(j) + '.fits'
-                            
-                        if not os.path.exists(noise_output):
-                            print 'Covariance error: noise output ' + str(noise_output) + ' does not exist'
-                            continue
-
-                        cov_output = rundir + 'n' + str(j) + '_cov.npz'
-        
-                        if not os.path.exists(cov_output):
-                            calc_covariance(noise_output,cov_output,self.map_sizes,self.bins,self.mass_range)
-
-                        if not os.path.exists(cov_output):
-                            continue
-
-                        data = numpy.load(cov_output)
-                        mean_dict = data['mean_dict'][()]
-                        cov_dict = data['cov_dict'][()]
-                        x = data['x']
-                        
-                        count += 1.0
-        
-                        for map_size in self.map_sizes:
-                            print 'Adding r' + str(i) + 'n' + str(j) + ' map ' + str(map_size) + ' to covariance'
-                            mean[map_size] += mean_dict[map_size]
-                            cov[map_size] += cov_dict[map_size]
-
-                        cov_adj_output = rundir + 'n' + str(j) + '_cov_adj.npz'
-
-                        if not os.path.exists(cov_adj_output):
-                            calc_covariance_adj(noise_output,cov_adj_output,self.map_sizes,self.bins,self.mass_range)
-
-                        if not os.path.exists(cov_adj_output):
-                            continue
-
-                        data = numpy.load(cov_adj_output)
-                        mean_dict = data['mean_dict'][()]
-                        cov_dict = data['cov_dict'][()]
-                        x = data['x']
-                        
-                        count_adj += 1.0
-        
-                        for map_size in self.map_sizes:
-                            print 'Adding r' + str(i) + 'n' + str(j) + ' map ' + str(map_size) + ' to adjusted covariance'
-                            mean_adj[map_size] += mean_dict[map_size]
-                            cov_adj[map_size] += cov_dict[map_size]
-
-                os.chdir(workingdir)
+                    if not os.path.exists(cov_output):
+                        cov_outputs[key] = cov_output
                 
-                for map_size in self.map_sizes:
-                    mean[map_size] = mean[map_size] / count
-                    cov[map_size] = cov[map_size] / count
-
-                for map_size in self.map_sizes:
-                    for i in range(self.bins):
-                        for j in range(self.bins):
-                            cov[map_size][i][j] -= mean[map_size][i] * mean[map_size][j]
-    
-                numpy.savez('cov.npz', x=x, mean=mean, cov=cov)
-
-                for map_size in self.map_sizes:
-                    mean_adj[map_size] = mean_adj[map_size] / count_adj
-                    cov_adj[map_size] = cov_adj[map_size] / count_adj
-
-                for map_size in self.map_sizes:
-                    for i in range(self.bins):
-                        for j in range(self.bins):
-                            cov_adj[map_size][i][j] -= mean_adj[map_size][i] * mean_adj[map_size][j]
-    
-                numpy.savez('cov_adj.npz', x=x, mean=mean_adj, cov=cov_adj)
-                            
-            except:
-                print 'Covariance error: could not run type ' + str(t) + ' excption: ' + str(sys.exc_info())
+                calc_covariances(noise_output, cov_outputs, self.pdfs)
+                
+        os.chdir(cwd)
+        
 
     def plot_analysis(self):
         pass
@@ -558,77 +478,47 @@ def add_noise(infile,outfile,cosmo,survey,analysis):
     
     healpy.fitsfunc.write_map(outfile, map_data)
 
-def calc_covariance(infile,outfile,map_sizes,bins,mass_range):
+def calc_covariances(infile,outfiles,pdfs):
     
-    print 'Calculating covariances: ' + infile + ' -> ' + outfile
-
+    if len(outfiles) < 1:
+        return
+    
     map_data = healpy.fitsfunc.read_map(infile)
+    
+    for key in outfiles.keys():
+        
+        outfile = outfiles[key]
+        pdf = pdfs[key]
+        
+        print 'Calculating covariances: ' + infile + ' -> ' + outfile
+    
+        mean_dict = {}
+        cov_dict = {}
 
-    mean_dict = {}
-    cov_dict = {}
-
-    for map_size in map_sizes:
-        print 'Calculating covariances for map size ' + str(map_size)
-
+        map_size = pdf[0]
+        divs = pdf[1]
+        bins = pdf[2]
+        mass_range = pdf[3]
+        
         mean = numpy.zeros(bins,dtype=numpy.float32)
         cov = numpy.zeros((bins,bins),dtype=numpy.float32)
-
+        
         map_temp = healpy.pixelfunc.ud_grade(map_data,map_size,power=-2,order_in='NESTED',order_out='NESTED')
         
         npix = healpy.pixelfunc.nside2npix(map_size)
-
-        for n in range(384):
-            temp = map_temp[npix/384*n:npix/384*(n+1)]
-            hist,bin_edges = numpy.histogram(temp, bins=bins, range=mass_range)
-            mean += hist
-            for x in range(bins):
-                for y in range(bins):
-                    cov[x][y] += hist[x] * hist[y]
-
-        mean = mean / 384.0
-        cov = cov / 384.0
-
-        mean_dict[map_size] = mean
-        cov_dict[map_size] = cov
-
-    x = 0.5*(bin_edges[1:]+bin_edges[:-1])
-
-    numpy.savez(outfile,x=x,mean_dict=mean_dict,cov_dict=cov_dict)
-
-def calc_covariance_adj(infile,outfile,map_sizes,bins,mass_range):
-    
-    print 'Calculating adjusted covariances: ' + infile + ' -> ' + outfile
-
-    map_data = healpy.fitsfunc.read_map(infile)
-
-    mean_dict = {}
-    cov_dict = {}
-
-    for map_size in map_sizes:
-        print 'Calculating adjusted covariances for map size ' + str(map_size)
-
-        mean = numpy.zeros(bins,dtype=numpy.float32)
-        cov = numpy.zeros((bins,bins),dtype=numpy.float32)
-
-        map_temp = healpy.pixelfunc.ud_grade(map_data,map_size,power=-2,order_in='NESTED',order_out='NESTED')
         
-        npix = healpy.pixelfunc.nside2npix(map_size)
-
-        for n in range(384):
-            temp = map_temp[npix/384*n:npix/384*(n+1)]
+        for n in range(divs):
+            temp = map_temp[npix/divs*n:npix/divs*(n+1)]
             temp = temp - numpy.mean(temp)
             hist,bin_edges = numpy.histogram(temp, bins=bins, range=mass_range)
             mean += hist
             for x in range(bins):
                 for y in range(bins):
                     cov[x][y] += hist[x] * hist[y]
-
-        mean = mean / 384.0
-        cov = cov / 384.0
-
-        mean_dict[map_size] = mean
-        cov_dict[map_size] = cov
-
-    x = 0.5*(bin_edges[1:]+bin_edges[:-1])
-
-    numpy.savez(outfile,x=x,mean_dict=mean_dict,cov_dict=cov_dict)
+        
+        mean = mean / float(divs)
+        cov = cov / float(divs)
+    
+        x = 0.5*(bin_edges[1:]+bin_edges[:-1])
+    
+        numpy.savez(outfile,x=x,mean=mean,cov=cov)
