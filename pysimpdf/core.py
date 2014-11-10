@@ -1,5 +1,6 @@
 
 PINOCCHIO_CORE_SURVEY_DEFAULT_NAME='test'
+PINOCCHIO_CORE_SURVEY_DEFAULT_NSIDE=8192
 PINOCCHIO_CORE_SURVEY_DEFAULT_SEED=0
 PINOCCHIO_CORE_SURVEY_DEFAULT_E=0.30
 PINOCCHIO_CORE_SURVEY_DEFAULT_NG=10
@@ -7,7 +8,7 @@ PINOCCHIO_CORE_SURVEY_DEFAULT_ZL=0.4
 PINOCCHIO_CORE_SURVEY_DEFAULT_ZS=0.8
 PINOCCHIO_CORE_SURVEY_DEFAULT_Q=1.0
 
-PINOCCHIO_CORE_ANALYSIS_DEFAULT_NSIDE=8192
+PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME='test'
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS={'test':(4096,384,110,(-1.0e15,10.0e15))}
 
 PINOCCHIO_CORE_SIMPARAMS_DEFAULT_ZPLC=0.6
@@ -31,9 +32,10 @@ class SimParams:
 
 class Survey:
 
-    def __init__(self, name=PINOCCHIO_CORE_SURVEY_DEFAULT_NAME, seed=PINOCCHIO_CORE_SURVEY_DEFAULT_SEED, e=PINOCCHIO_CORE_SURVEY_DEFAULT_E, ng=PINOCCHIO_CORE_SURVEY_DEFAULT_NG, zl=PINOCCHIO_CORE_SURVEY_DEFAULT_ZL, zs=PINOCCHIO_CORE_SURVEY_DEFAULT_ZS, q=PINOCCHIO_CORE_SURVEY_DEFAULT_Q):
+    def __init__(self, name=PINOCCHIO_CORE_SURVEY_DEFAULT_NAME, nside=PINOCCHIO_CORE_SURVEY_DEFAULT_NSIDE, seed=PINOCCHIO_CORE_SURVEY_DEFAULT_SEED, e=PINOCCHIO_CORE_SURVEY_DEFAULT_E, ng=PINOCCHIO_CORE_SURVEY_DEFAULT_NG, zl=PINOCCHIO_CORE_SURVEY_DEFAULT_ZL, zs=PINOCCHIO_CORE_SURVEY_DEFAULT_ZS, q=PINOCCHIO_CORE_SURVEY_DEFAULT_Q):
         
         self.name = name
+        self.nside = nside
         self.seed = seed
         self.e = e
         self.ng = ng
@@ -45,8 +47,9 @@ class Survey:
 
 class Analysis:
     
-    def __init__(self, nside=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NSIDE, pdfs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS):
-        self.nside = nside
+    def __init__(self, name=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME, pdfs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS):
+
+        self.name = name
         self.pdfs = pdfs
 
 class SimulationSet:
@@ -115,9 +118,11 @@ class Simulation:
         else:
             sname = 'fiducial'
 
+        aname = 'fiducial'
+
         self.cosmo = Cosmology(name=cname)
         self.survey = Survey(name=sname)
-        self.analysis = Analysis(nside=nside,pdfs=pdfs)
+        self.analysis = Analysis(name=aname,pdfs=pdfs)
         self.simparams = SimParams()
 
         if param == 'h':
@@ -234,10 +239,10 @@ class Simulation:
                 print 'Healpix error! pinocchio output does not exist: ' + pinocchio_output
                 return
 
-            healpix_output = 'healpix_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
+            healpix_output = 'healpix_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
 
             if not os.path.exists(healpix_output):
-                healpixify(pinocchio_output,healpix_output,self.analysis.nside)
+                healpixify(pinocchio_output,healpix_output,self.survey.nside)
                 
             if not os.path.exists(healpix_output):
                 print 'Healpix error! could not generate: ' + healpix_output
@@ -274,17 +279,17 @@ class Simulation:
             
             os.chdir(rundir)
 
-            healpix_output = 'healpix_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
+            healpix_output = 'healpix_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
                 
             if not os.path.exists(healpix_output):
                 print 'Noise error! healpix output does not exist: ' + healpix_output
                 return
 
             for j in range(1,self.nnoise+1):
-                noise_output = 'noise_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
+                noise_output = 'noise_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
                 
                 if not os.path.exists(noise_output):
-                    add_noise(healpix_output,noise_output,self.cosmo,self.survey,self.analysis)
+                    add_noise(healpix_output,noise_output,self.cosmo,self.survey)
                     
                 if not os.path.exists(noise_output):
                     print 'Noise error! could not generate: ' + noise_output
@@ -339,7 +344,160 @@ class Simulation:
                 calc_covariances(noise_output, cov_outputs, self.analysis.pdfs)
                 
         os.chdir(cwd)
+    
+    def combine_covariances(self):
+
+        cwd = os.getcwd()
         
+        if not os.path.exists(self.basedir):
+            print 'Covariance averaging error! basedir does not exist: ' + self.basedir
+            return
+        
+        os.chdir(self.basedir)
+        
+        if not os.path.exists(self.cosmo.name):
+            print 'Covariance averaging error! simulation dir does not exist: ' + self.cosmo.name
+            return
+        
+        os.chdir(self.cosmo.name)
+        
+        workingdir = os.getcwd()
+
+        for key in self.analysis.pdfs.keys():
+
+            cov_outputs = []
+        
+            for i in range(1,self.nsim+1):
+                os.chdir(workingdir)
+            
+                rundir = 'r' + str(i)
+            
+                if not os.path.exists(rundir):
+                    print 'Covariance averaging error! rundir does not exist: ' + rundir
+                    return
+            
+                os.chdir(rundir)
+
+                for j in range(1,self.nnoise+1):
+                    cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '_' + rundir + 'n' + str(j) + '.npz'
+                    
+                    cov_output = os.path.abspath(cov_output)
+
+                    if not os.path.exists(cov_output):
+                        print 'Covariance averaging error! covariance does not exist: ' + cov_output
+                        return
+                    
+                    cov_outputs.append(cov_output)
+
+            
+            avg_cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+
+            os.chdir(workingdir)
+
+            avg_covariances(cov_outputs, avg_cov_output, self.analysis.pdfs[key])
+                
+        os.chdir(cwd)
+
+    def diff_covariances(self, fid):
+        
+        cwd = os.getcwd()
+        
+        if not os.path.exists(self.basedir):
+            print 'Covariance differencing error! basedir does not exist: ' + self.basedir
+            return
+        
+        os.chdir(self.basedir)
+
+        param = self.t[0]
+
+        if param == 'h':
+            delta = self.cosmo.h - fid.cosmo.h
+            
+        elif param == 'w':
+            delta = self.cosmo.w0 - fid.cosmo.w0
+
+        elif param == 'om':
+            delta = self.cosmo.om - fid.cosmo.om
+
+        elif param == 's8':
+            delta = self.cosmo.s8 - fid.cosmo.s8
+
+        elif param == 'ok':
+            delta = self.cosmo.ok - fid.cosmo.ok
+
+        elif param == 'e':
+            delta = self.survey.e - fid.survey.e
+
+        elif param == 'q':
+            delta = self.survey.q - fid.survey.q
+
+        else:
+            print 'Covariance differencing error! invalid parameter type: ' + param
+            return
+
+
+        for key in self.analysis.pdfs.keys():
+
+            delta_cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            fid_cov_output = 'cov_' + str(fid.analysis.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + str(key) + '.npz'
+
+            delta_cov_output = self.basedir + '/' + self.cosmo.name + '/' + delta_cov_output
+            fid_cov_output = fid.basedir + '/' + fid.cosmo.name + '/' + fid_cov_output
+
+            if not os.path.exists(delta_cov_output):
+                print 'Covariance differencing error! delta cov output does not exist: ' + delta_cov_output
+                continue
+
+            if not os.path.exists(fid_cov_output):
+                print 'Covariance differencing error! fiducial cov output does not exist: ' + fid_cov_output
+                continue
+
+            dcov_out = 'dcov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+
+            diff_covariances(delta_cov_output, fid_cov_output, dcov_out, delta)
+                
+        os.chdir(cwd)
+
+    def calc_fisher(self, deltas):
+        
+        cwd = os.getcwd()
+        
+        if not os.path.exists(self.basedir):
+            print 'Fisher error! basedir does not exist: ' + self.basedir
+            return
+        
+        os.chdir(self.basedir)
+
+        for key in self.analysis.pdfs.keys():
+
+            fid_cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            fid_cov_output = self.basedir + '/' + self.cosmo.name + '/' + fid_cov_output
+
+            if not os.path.exists(fid_cov_output):
+                print 'Fisher error! fiducial cov output does not exist: ' + fid_cov_output
+                continue
+
+            dcov_outs = []
+            params = []
+
+            for delta in deltas:
+                dcov_out = 'dcov_' + str(delta.analysis.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + str(key) + '.npz'
+                dcov_out = delta.basedir + '/' + dcov_out
+                
+                if not os.path.exists(dcov_out):
+                    print 'Fisher error! delta cov output does not exist: ' + dcov_out
+                    continue
+
+                param = delta.t[0]
+
+                dcov_outs.append(dcov_out)
+                params.append(param)
+
+            fisher_out = 'F_' + str(delta.analysis.nside) + '_' + str(key) + '.npz'
+
+            calc_fisher(fid_cov_output, dcov_outs, params, fisher_out)
+                
+        os.chdir(cwd)
 
     def plot_analysis(self):
         pass
@@ -441,7 +599,7 @@ def healpixify(infile,outfile,nside):
 
     healpy.fitsfunc.write_map(outfile, map_data)
 
-def add_noise(infile,outfile,cosmo,survey,analysis):
+def add_noise(infile,outfile,cosmo,survey):
 
     print 'Adding noise to healpix map: ' + infile + ' -> ' + outfile
     
@@ -478,12 +636,30 @@ def add_noise(infile,outfile,cosmo,survey,analysis):
     
     healpy.fitsfunc.write_map(outfile, map_data)
 
-def calc_covariances(infile,outfiles,pdfs):
-    
-    if len(outfiles) < 1:
-        return
-    
-    map_data = healpy.fitsfunc.read_map(infile)
+def calc_covariance(infile,outfile,pdf_dict,ps_dict):
+        
+    map_data_raw = healpy.fitsfunc.read_map(infile, dtype=numpy.float32)
+
+    mdata = {}
+
+    for key in pdf_dict.keys():
+        pdf = pdf_dict[key]
+        
+        nside = pdf[0]
+        divs = pdf[1]
+        bins = pdf[2]
+        mass_range = pdf[3]
+
+        if nside not in mdata.keys():
+            mdata[nside] = healpy.pixelfunc.ud_grade(map_data_raw,nside,power=-1,order_in='NESTED',order_out='NESTED')
+
+    for key in ps_dict.keys():
+        ps = ps_dict[key]
+        
+        nside = ps[0]
+        divs = ps[1]
+
+        
     
     for key in outfiles.keys():
         
@@ -522,3 +698,110 @@ def calc_covariances(infile,outfiles,pdfs):
         x = 0.5*(bin_edges[1:]+bin_edges[:-1])
     
         numpy.savez(outfile,x=x,mean=mean,cov=cov)
+
+def avg_covariances(infiles,outfile,pdf):
+
+    map_size = pdf[0]
+    divs = pdf[1]
+    bins = pdf[2]
+    mass_range = pdf[3]
+
+    mean_avg = numpy.zeros(bins,dtype=numpy.float32)
+    cov_avg = numpy.zeros((bins,bins),dtype=numpy.float32)
+    count = 0.0
+    
+    for f in infiles:
+        
+        data = numpy.load(f)
+
+        x = data['x']
+        cov = data['cov']
+        mean = data['mean']
+
+        mean_avg += mean
+        cov_avg += cov
+        count += 1.0
+
+    mean_avg = mean_avg / count
+    cov_avg = cov_avg / count
+
+    numpy.savez(outfile, x=x, mean=mean_avg, cov=cov_avg)
+
+def diff_covariances(infile, fidfile, outfile, delta):
+
+    data = numpy.load(infile)
+    fid = numpy.load(fidfile)
+
+    data_x = data['x']
+
+    data_mean = data['mean']
+    data_cov = data['cov']
+
+    fid_mean = fid['mean']
+    fid_cov = fid['cov']
+
+    diff_mean = (data_mean - fid_mean) / delta
+    diff_cov = (data_cov - fid_cov) / delta
+
+    numpy.savez(outfile, x=data_x, mean=diff_mean, cov=diff_cov)
+
+
+def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out):
+    
+    fid = numpy.load(fid_cov_output)
+
+    mean = fid['mean']
+    cov = fid['cov']
+
+    for i in range(len(mean)):
+        for j in range(len(mean)):
+            cov[i][j] -= mean[i]*mean[j]
+
+    cov_range = []
+
+    for i in range(len(mean)):
+        if cov[i][i] != 0.0:
+            cov_range.append(i)
+
+    cov = cov[cov_range][:,cov_range]
+
+    cov_inv = numpy.linalg.inv(cov)
+
+    n = len(dcov_outs)
+
+    diffs = []
+
+    for dcov_out in dcov_outs:
+
+        #print dcov_out
+        data = numpy.load(dcov_out)
+        diff = data['mean']
+        #print numpy.shape(diff)
+        diff = diff[cov_range]
+        #print diff
+        #print numpy.shape(diff)
+        diffs.append(diff)
+        
+    F = numpy.zeros([n,n])
+
+    for i in range(n):
+        for j in range(n):
+            #print numpy.shape(diffs[i])
+            #print numpy.shape(cov_inv)
+            #print numpy.shape(diffs[j])
+
+            #print diffs[i]
+            #print cov_inv
+            #print diffs[j]
+
+            d = numpy.dot(diffs[i], numpy.dot(cov_inv, diffs[j]))
+            #print d
+            F[i][j] = d
+
+    F_inv = numpy.linalg.inv(F)
+
+    numpy.savez(fisher_out, F=F, F_inv=F_inv, params=params)
+    
+    
+    
+    

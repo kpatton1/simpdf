@@ -11,22 +11,29 @@ t = [['h', 0.76, 5, 5],
      ['w', -0.90, 5, 5],
      ['q', 1.1, 5, 5]]
 
-#l = [f] + t
+l = [f] + t
 
-l = t + [f]
+#l = t + [f]
 
 print l
 
-maps={4096:(4096,384,110,(-1.0e15,10.0e15)), 1024:(1024,384,110,(-1.0e15,10.0e15)), 256:(256,384,110,(-1.0e15,10.0e15)), 64:(64,384,110,(-1.0e15,10.0e15))}
+maps={4096:(4096,384,110,(-1.0e15,10.0e15)), 1024:(1024,384,110,(-1.0e15,10.0e15)), 256:(256,384,110,(-1.0e15,10.0e15)), 64:(64,384,200,(-10.0e15,10.0e15))}
+ps={1024:(1024,384,(0,3072))}
 nside=8192
 
 basedir='data'
 
-ls = []
 
-for i in l:
-    ls.append(Simulation(basedir,i,nside,maps))
 
+
+fs = Simulation(basedir,f,nside,maps)
+
+ts = []
+
+for i in t:
+    ts.append(Simulation(basedir,i,nside,maps))
+
+ls = ts + [fs]
 
 for s in ls:
     s.run_pinocchio()
@@ -35,3 +42,11 @@ for s in ls:
     s.convert_healpix()
     s.add_noise()
     s.generate_covariances()
+    s.combine_covariances()
+
+
+for s in ts:
+    s.diff_covariances(fs)
+
+
+fs.calc_fisher(ts)
