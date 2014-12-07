@@ -9,7 +9,8 @@ PINOCCHIO_CORE_SURVEY_DEFAULT_ZS=0.8
 PINOCCHIO_CORE_SURVEY_DEFAULT_Q=1.0
 
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME='test'
-PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS={'test':(4096,384,110,(-1.0e15,10.0e15))}
+PINOCCHIO_CORE_ANALYSIS_DEFAULT_ADICT={}
+PINOCCHIO_CORE_ANALYSIS_DEFAULT_DIVS=384
 
 PINOCCHIO_CORE_SIMPARAMS_DEFAULT_ZPLC=0.6
 PINOCCHIO_CORE_SIMPARAMS_DEFAULT_BOXSIZE=1600.0
@@ -47,10 +48,104 @@ class Survey:
 
 class Analysis:
     
-    def __init__(self, name=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME, pdfs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_PDFS):
+    def __init__(self, name=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME, adict=PINOCCHIO_CORE_ANALYSIS_DEFAULT_ADICT, divs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_DIVS):
 
         self.name = name
-        self.pdfs = pdfs
+        self.adict = adict
+        self.divs = divs
+
+        self.alist = []
+
+        for n,t in adict.keys():
+            params = adict[(n,t)]
+            
+            if t == 'pdf':
+                map_size = n
+                
+                bins = params[0]
+                bin_min = params[1]
+                bin_max = params[2]
+
+                a = AnalysisPDF(n, self.divs, bins, bin_min, bin_max)
+
+                alist.append(a)
+
+            elif t == 'ps':
+                map_size = n
+                
+                lmin = 0
+                lmax = 3 * map_size
+                
+                a = AnalysisPS(n, self.divs, lmin, lmax)
+
+                alist.append(a)
+
+            else:
+                print 'Error! Unknown analysis type: ' + str(t)
+                print str((n,t)) + ' -> ' + str(params)
+
+class AnalysisPS:
+
+    def __init__(self, map_size, divs, lmin=0, lmax=-1):
+        
+        if lmax < 0 or lmax > 3 * map_size:
+            lmax = 3 * map_size
+
+        if lmin > lmax:
+            lmin = lmax
+
+        self.map_size = map_size
+        self.divs = divs
+        self.lmin = lmin
+        self.lmax = lmax
+
+        self.bins = lmax - lmin
+
+    def x():
+
+        x = numpy.arange(lmin,lmax)
+
+        return x
+
+    def process_data(self, data):
+
+        npix = healpy.pixelfunc.nside2npix(nside)
+
+        ps_map = numpy.zeros(npix, dtype=numpy.float32)
+
+        ps_data[0:npix/divs] = data
+
+        ps_data_n2r = healpy.pixelfunc.reorder(ps_data, n2r = True)
+
+        cls = healpy.sphtfunc.anafast(ps_data_n2r)
+
+        return cls[lmin:lmax]
+
+class AnalysisPDF:
+
+    def __init__(self, map_size, divs, bins, bin_min, bin_max):
+
+        self.map_size = map_size
+        self.divs = divs
+        self.bins = bins
+        self.bin_min = bin_min
+        self.bin_max = bin_max
+
+    def x():
+        step = numpy.float32(self.bin_max - self.bin_min) / self.bins
+
+        x = arange(self.bins, dtype=numpy.float32)
+
+        x = (x + 0.5) * step
+
+        return x
+
+    def process_data(self, data):
+        
+        hist,bin_edges = numpy.histogram(data, bins=self.bins, range=(self.bin_min,self.bin_max))
+
+        return hist
+        
 
 class SimulationSet:
 
@@ -636,13 +731,41 @@ def add_noise(infile,outfile,cosmo,survey):
     
     healpy.fitsfunc.write_map(outfile, map_data)
 
-def calc_covariance(infile,outfile,pdf_dict,ps_dict):
+def measure_data(infile,outfile,analysis):
+
+    map_data_raw = healpy.fitsfunc.read_map(infile, dtype=numpy.float32)
+
+    mdata = {}
+
+    divs = analysis.divs
+    alist = analysis.alist
+
+    data_vector = []
+
+    for a in alist:
+        map_size = a.map_size
+
+        if map_size not in mdata.keys():
+            mdata[map_size] = healpy.pixelfunc.ud_grade(map_data_raw,map_size,power=-1,order_in='NESTED',order_out='NESTED')
+
+    for n in range(divs):
+        
+        data = []
+
+        x = []
+        
+        for a in alist:
+
+
+def calc_covariance(infile,outfile,analysis):
         
     map_data_raw = healpy.fitsfunc.read_map(infile, dtype=numpy.float32)
 
     mdata = {}
 
-    for key in pdf_dict.keys():
+    adict = analysis.adict
+
+    for key in adict.keys():
         pdf = pdf_dict[key]
         
         nside = pdf[0]
@@ -653,12 +776,11 @@ def calc_covariance(infile,outfile,pdf_dict,ps_dict):
         if nside not in mdata.keys():
             mdata[nside] = healpy.pixelfunc.ud_grade(map_data_raw,nside,power=-1,order_in='NESTED',order_out='NESTED')
 
-    for key in ps_dict.keys():
-        ps = ps_dict[key]
-        
-        nside = ps[0]
-        divs = ps[1]
 
+    data = []
+    
+
+    for n in range(divs):
         
     
     for key in outfiles.keys():

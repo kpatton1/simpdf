@@ -38,8 +38,7 @@ ncls = 3*nside
 mean = numpy.zeros(ncls, dtype=numpy.float32)
 cov = numpy.zeros((ncls,ncls), dtype=numpy.float32)
 
-#for n in range(divs):
-for n in range(5):
+for n in range(divs):
 
     print 'div ' + str(n)
 
@@ -83,7 +82,15 @@ for n in range(5):
 #    cls_256[0] = cls_256[1]
 #    cls_128[0] = cls_128[1]
 
-    l_1024 = numpy.arange(len(cls_1024))
+    for i in range(ncls):
+        mean[i] = mean[i] + cls_1024[i]
+
+    for i in range(ncls):
+        for j in range(ncls):
+            cov[i][j] = cov[i][j] + cls_1024[i] * cls_1024[j]
+
+
+#    l_1024 = numpy.arange(len(cls_1024))
 #    l_512 = numpy.arange(len(cls_512))
 #    l_256 = numpy.arange(len(cls_256))
 #    l_128 = numpy.arange(len(cls_128))
@@ -93,19 +100,19 @@ for n in range(5):
 #    plt.plot(l_256, l_256*(l_256+1)*cls_256, label='256')
 #    plt.plot(l_128, l_128*(l_128+1)*cls_128, label='128')
 
-    plt.plot(l_1024, cls_1024, label=str(n))
+#    plt.plot(l_1024, cls_1024, label=str(n))
 #    plt.plot(l_512, cls_512, label='512')
 #    plt.plot(l_256, cls_256, label='256')
 #    plt.plot(l_128, cls_128, label='128')
 
-plt.yscale('log')
-plt.xscale('log')
+#plt.yscale('log')
+#plt.xscale('log')
 
-plt.ylim(1.0e14,1.0e16)
+#plt.ylim(1.0e14,1.0e16)
 
-plt.legend(loc='upper left')
+#plt.legend(loc='upper left')
 
-plt.show()
+#plt.show()
 
 #    print 'calculated cls!'
 
