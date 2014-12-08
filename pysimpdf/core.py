@@ -215,7 +215,7 @@ class Simulation:
         else:
             sname = 'fiducial'
 
-        aname = 'fiducial'
+        #aname = 'fiducial'
 
         self.cosmo = Cosmology(name=cname)
         self.survey = Survey(name=sname)
