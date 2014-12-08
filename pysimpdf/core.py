@@ -67,6 +67,7 @@ class Analysis:
                 bin_max = params[2]
 
                 a = AnalysisPDF(n, self.divs, bins, bin_min, bin_max)
+                a.info = ((n,t),params)
 
                 self.alist.append(a)
 
@@ -77,6 +78,7 @@ class Analysis:
                 lmax = 3 * map_size
                 
                 a = AnalysisPS(n, self.divs, lmin, lmax)
+                a.info = ((n,t),params)
 
                 self.alist.append(a)
 
@@ -787,6 +789,8 @@ def measure_data(infile,outfile,analysis):
     
     ranges = []
     
+    info = []
+    
     xlen = 0
 
     for a in alist:
@@ -797,6 +801,8 @@ def measure_data(infile,outfile,analysis):
         a_range = (xlen,xlen+len(a_x))
         
         ranges.append(a_range)
+        
+        info.append(a.info)
         
         x.extend(a_x)
 
@@ -826,7 +832,7 @@ def measure_data(infile,outfile,analysis):
 
         measurements.append(measurement)
 
-    numpy.savez(outfile,x=x,m=measurements,r=ranges)
+    numpy.savez(outfile,x=x,m=measurements,r=ranges,info=info)
 
 def calc_covariance(infile,outfile):
     
@@ -835,6 +841,7 @@ def calc_covariance(infile,outfile):
     x = data['x']
     m = data['m']
     r = data['r']
+    info = data['info']
     
     n = len(x)
     
@@ -854,7 +861,7 @@ def calc_covariance(infile,outfile):
         mean = mean / float(count)
         cov = cov / float(count)
         
-    numpy.savez(outfile,x=x,mean=mean,cov=cov,r=r)
+    numpy.savez(outfile,x=x,mean=mean,cov=cov,r=r,info=info)
 
 def avg_covariances(infiles,outfile,pdf):
 
