@@ -960,7 +960,7 @@ def calc_covariance(infile,outfile):
     numpy.savez(outfile,x=x,mean=mean,cov=cov,r=r,info=info)
 
 def avg_covariances(infiles,outfile):
-
+    
     count = 0.0
     
     first = True
