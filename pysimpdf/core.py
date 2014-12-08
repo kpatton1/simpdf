@@ -101,7 +101,7 @@ class AnalysisPS:
 
         self.bins = lmax - lmin
 
-    def x():
+    def x(self):
 
         x = numpy.arange(lmin,lmax)
 
@@ -131,7 +131,7 @@ class AnalysisPDF:
         self.bin_min = bin_min
         self.bin_max = bin_max
 
-    def x():
+    def x(self):
         step = numpy.float32(self.bin_max - self.bin_min) / self.bins
 
         x = arange(self.bins, dtype=numpy.float32)
