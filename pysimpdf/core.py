@@ -103,23 +103,23 @@ class AnalysisPS:
 
     def x(self):
 
-        x = numpy.arange(lmin,lmax)
+        x = numpy.arange(self.lmin,self.lmax)
 
         return x
 
     def process_data(self, data):
 
-        npix = healpy.pixelfunc.nside2npix(nside)
+        npix = healpy.pixelfunc.nside2npix(self.map_size)
 
         ps_map = numpy.zeros(npix, dtype=numpy.float32)
 
-        ps_data[0:npix/divs] = data
+        ps_data[0:npix/self.divs] = data
 
         ps_data_n2r = healpy.pixelfunc.reorder(ps_data, n2r = True)
 
         cls = healpy.sphtfunc.anafast(ps_data_n2r)
 
-        return cls[lmin:lmax]
+        return cls[self.lmin:self.lmax]
 
 class AnalysisPDF:
 
