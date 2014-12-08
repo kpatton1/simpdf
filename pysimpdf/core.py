@@ -595,39 +595,35 @@ class Simulation:
         
         workingdir = os.getcwd()
 
-        for key in self.analysis.pdfs.keys():
-
-            cov_outputs = []
-        
-            for i in range(1,self.nsim+1):
-                os.chdir(workingdir)
-            
-                rundir = 'r' + str(i)
-            
-                if not os.path.exists(rundir):
-                    print 'Covariance averaging error! rundir does not exist: ' + rundir
-                    return
-            
-                os.chdir(rundir)
-
-                for j in range(1,self.nnoise+1):
-                    cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
-                    
-                    cov_output = os.path.abspath(cov_output)
-
-                    if not os.path.exists(cov_output):
-                        print 'Covariance averaging error! covariance does not exist: ' + cov_output
-                        return
-                    
-                    cov_outputs.append(cov_output)
-
-            
-            avg_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-
+        cov_outputs = []
+    
+        for i in range(1,self.nsim+1):
             os.chdir(workingdir)
+        
+            rundir = 'r' + str(i)
+        
+            if not os.path.exists(rundir):
+                print 'Covariance averaging error! rundir does not exist: ' + rundir
+                return
+        
+            os.chdir(rundir)
 
-            avg_covariances(cov_outputs, avg_cov_output)
+            for j in range(1,self.nnoise+1):
+                cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
                 
+                cov_output = os.path.abspath(cov_output)
+
+                if not os.path.exists(cov_output):
+                    print 'Covariance averaging error! covariance does not exist: ' + cov_output
+                    return
+                
+                cov_outputs.append(cov_output)
+
+        
+        avg_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+
+        avg_covariances(cov_outputs, avg_cov_output)
+        
         os.chdir(cwd)
 
     def diff_covariances(self, fid):
