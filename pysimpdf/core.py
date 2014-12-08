@@ -672,11 +672,11 @@ class Simulation:
 
         if not os.path.exists(delta_cov_output):
             print 'Covariance differencing error! delta cov output does not exist: ' + delta_cov_output
-            continue
+            return
 
         if not os.path.exists(fid_cov_output):
             print 'Covariance differencing error! fiducial cov output does not exist: ' + fid_cov_output
-            continue
+            return
 
         dcov_out = 'dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
 
@@ -699,7 +699,7 @@ class Simulation:
 
         if not os.path.exists(fid_cov_output):
             print 'Fisher error! fiducial cov output does not exist: ' + fid_cov_output
-            continue
+            return
 
         dcov_outs = []
         params = []
@@ -710,7 +710,7 @@ class Simulation:
             
             if not os.path.exists(dcov_out):
                 print 'Fisher error! delta cov output does not exist: ' + dcov_out
-                continue
+                return
 
             param = delta.t[0]
 
