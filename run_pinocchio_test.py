@@ -28,7 +28,7 @@ aname='fullcov'
 
 basedir='data'
 
-fs = Simulation(basedir,i,adict,aname)
+fs = Simulation(basedir,f,adict,aname)
 
 ts = []
 
