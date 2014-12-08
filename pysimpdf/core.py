@@ -68,7 +68,7 @@ class Analysis:
 
                 a = AnalysisPDF(n, self.divs, bins, bin_min, bin_max)
 
-                alist.append(a)
+                self.alist.append(a)
 
             elif t == 'ps':
                 map_size = n
@@ -78,7 +78,7 @@ class Analysis:
                 
                 a = AnalysisPS(n, self.divs, lmin, lmax)
 
-                alist.append(a)
+                self.alist.append(a)
 
             else:
                 print 'Error! Unknown analysis type: ' + str(t)
