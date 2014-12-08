@@ -664,25 +664,23 @@ class Simulation:
             return
 
 
-        for key in self.analysis.pdfs.keys():
+        delta_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        fid_cov_output = 'cov_' + str(fid.survey.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + fid.analysis.name + '.npz'
 
-            delta_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-            fid_cov_output = 'cov_' + str(fid.survey.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + fid.analysis.name + '.npz'
+        delta_cov_output = self.basedir + '/' + self.cosmo.name + '/' + delta_cov_output
+        fid_cov_output = fid.basedir + '/' + fid.cosmo.name + '/' + fid_cov_output
 
-            delta_cov_output = self.basedir + '/' + self.cosmo.name + '/' + delta_cov_output
-            fid_cov_output = fid.basedir + '/' + fid.cosmo.name + '/' + fid_cov_output
+        if not os.path.exists(delta_cov_output):
+            print 'Covariance differencing error! delta cov output does not exist: ' + delta_cov_output
+            continue
 
-            if not os.path.exists(delta_cov_output):
-                print 'Covariance differencing error! delta cov output does not exist: ' + delta_cov_output
-                continue
+        if not os.path.exists(fid_cov_output):
+            print 'Covariance differencing error! fiducial cov output does not exist: ' + fid_cov_output
+            continue
 
-            if not os.path.exists(fid_cov_output):
-                print 'Covariance differencing error! fiducial cov output does not exist: ' + fid_cov_output
-                continue
+        dcov_out = 'dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
 
-            dcov_out = 'dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-
-            diff_covariances(delta_cov_output, fid_cov_output, dcov_out, delta)
+        diff_covariances(delta_cov_output, fid_cov_output, dcov_out, delta)
                 
         os.chdir(cwd)
 
@@ -696,39 +694,37 @@ class Simulation:
         
         os.chdir(self.basedir)
 
-        for key in self.analysis.pdfs.keys():
+        fid_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        fid_cov_output = self.basedir + '/' + self.cosmo.name + '/' + fid_cov_output
 
-            fid_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-            fid_cov_output = self.basedir + '/' + self.cosmo.name + '/' + fid_cov_output
+        if not os.path.exists(fid_cov_output):
+            print 'Fisher error! fiducial cov output does not exist: ' + fid_cov_output
+            continue
 
-            if not os.path.exists(fid_cov_output):
-                print 'Fisher error! fiducial cov output does not exist: ' + fid_cov_output
+        dcov_outs = []
+        params = []
+
+        for delta in deltas:
+            dcov_out = 'dcov_' + str(delta.analysis.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + delta.analysis.name + '.npz'
+            dcov_out = delta.basedir + '/' + dcov_out
+            
+            if not os.path.exists(dcov_out):
+                print 'Fisher error! delta cov output does not exist: ' + dcov_out
                 continue
 
-            dcov_outs = []
-            params = []
+            param = delta.t[0]
 
-            for delta in deltas:
-                dcov_out = 'dcov_' + str(delta.analysis.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + delta.analysis.name + '.npz'
-                dcov_out = delta.basedir + '/' + dcov_out
-                
-                if not os.path.exists(dcov_out):
-                    print 'Fisher error! delta cov output does not exist: ' + dcov_out
-                    continue
+            dcov_outs.append(dcov_out)
+            params.append(param)
 
-                param = delta.t[0]
+        code = ''
 
-                dcov_outs.append(dcov_out)
-                params.append(param)
+        for r in ranges:
+            code = code + str(r)
 
-            code = ''
+        fisher_out = 'F_' + str(delta.analysis.nside) + '_' + self.analysis.name + '_' + code + '.npz'
 
-            for r in ranges:
-                code = code + str(r)
-
-            fisher_out = 'F_' + str(delta.analysis.nside) + '_' + self.analysis.name + '_' + code + '.npz'
-
-            calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges)
+        calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges)
                 
         os.chdir(cwd)
 
