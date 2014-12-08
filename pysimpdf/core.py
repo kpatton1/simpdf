@@ -134,7 +134,7 @@ class AnalysisPDF:
     def x(self):
         step = numpy.float32(self.bin_max - self.bin_min) / self.bins
 
-        x = arange(self.bins, dtype=numpy.float32)
+        x = numpy.arange(self.bins, dtype=numpy.float32)
 
         x = (x + 0.5) * step
 
