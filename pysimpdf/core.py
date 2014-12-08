@@ -626,7 +626,7 @@ class Simulation:
 
             os.chdir(workingdir)
 
-            avg_covariances(cov_outputs, avg_cov_output, self.analysis.pdfs[key])
+            avg_covariances(cov_outputs, avg_cov_output)
                 
         os.chdir(cwd)
 
