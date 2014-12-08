@@ -33,7 +33,7 @@ fs = Simulation(basedir,f,nside,maps)
 ts = []
 
 for i in t:
-    ts.append(Simulation(basedir,i,nside,maps))
+    ts.append(Simulation(basedir,i,adict,aname))
 
 ls = ts + [fs]
 
