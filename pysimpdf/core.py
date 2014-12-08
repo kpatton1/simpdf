@@ -111,7 +111,7 @@ class AnalysisPS:
 
         npix = healpy.pixelfunc.nside2npix(self.map_size)
 
-        ps_map = numpy.zeros(npix, dtype=numpy.float32)
+        ps_data = numpy.zeros(npix, dtype=numpy.float32)
 
         ps_data[0:npix/self.divs] = data
 
