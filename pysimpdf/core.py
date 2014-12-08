@@ -249,6 +249,8 @@ class Simulation:
             
     def run_pinocchio(self):
         
+        print 'Running pinocchio for ' + str(self.cosmo.name)
+        
         cwd = os.getcwd()
         
         if not os.path.exists(self.basedir):
@@ -303,6 +305,8 @@ class Simulation:
 
     def convert_healpix(self):
         
+        print 'Converting to healpix for ' + str(self.cosmo.name)
+        
         cwd = os.getcwd()
 
         if not os.path.exists(self.basedir):
@@ -348,6 +352,8 @@ class Simulation:
         os.chdir(cwd)
 
     def add_noise(self):
+        
+        print 'Adding noise to ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name)
         
         cwd = os.getcwd()
 
@@ -395,6 +401,8 @@ class Simulation:
         os.chdir(cwd)
 
     def measure_data(self):
+        
+        print 'Measuring data for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
     
         cwd = os.getcwd()
         
@@ -441,6 +449,8 @@ class Simulation:
         os.chdir(cwd)
 
     def generate_covariances(self):
+        
+        print 'Generating covariances for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
         
         cwd = os.getcwd()
         
@@ -853,9 +863,7 @@ def calc_covariance(infile,outfile):
     for i in m:
         mean += i
         count += 1
-        for x in range(n):
-            for y in range(n):
-                cov[x][y] += i[x] * i[y]
+        cov[x][y] += numpy.outer(i,i)
 
     if count > 0:
         mean = mean / float(count)
