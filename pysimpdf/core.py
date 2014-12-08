@@ -619,6 +619,7 @@ class Simulation:
                 
                 cov_outputs.append(cov_output)
 
+        os.chdir(workingdir)
         
         avg_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
 
