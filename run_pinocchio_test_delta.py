@@ -2,8 +2,8 @@
 import os
 from pysimpdf.core import Simulation
 
-nsim_fid = 20
-nsim_delta = 5
+nsim_fid = 1
+nsim_delta = 1
 nnoise = 1
 
 f = ['f', 0.0, nsim_fid, nnoise]
@@ -38,6 +38,10 @@ for s in ls:
 for s in ls:
     s.convert_healpix()
     s.add_noise()
+    
+    s.clean_measures()
+    s.clean_covariances()
+    
     s.measure_data()
     s.generate_covariances()
 

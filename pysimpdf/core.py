@@ -448,6 +448,45 @@ class Simulation:
     
         os.chdir(cwd)
 
+    def clean_measures(self):
+    
+        print 'Cleaning measurements for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
+        
+        cwd = os.getcwd()
+        
+        if not os.path.exists(self.basedir):
+            print 'Measurement error! basedir does not exist: ' + self.basedir
+            return
+        
+        os.chdir(self.basedir)
+        
+        if not os.path.exists(self.cosmo.name):
+            print 'Measurement error! simulation dir does not exist: ' + self.cosmo.name
+            return
+    
+        os.chdir(self.cosmo.name)
+        
+        workingdir = os.getcwd()
+        
+        for i in range(1,self.nsim+1):
+            os.chdir(workingdir)
+            
+            rundir = 'r' + str(i)
+            
+            if not os.path.exists(rundir):
+                print 'Measurement error! rundir does not exist: ' + rundir
+                return
+        
+            os.chdir(rundir)
+            
+            for j in range(1,self.nnoise+1):
+                measure_output = 'measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
+                
+                if os.path.exists(measure_output):
+                    os.remove(measure_output)
+
+        os.chdir(cwd)
+
     def generate_covariances(self):
         
         print 'Generating covariances for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
@@ -496,7 +535,48 @@ class Simulation:
                     print 'Covariance error! could not generate: ' + cov_output
         
         os.chdir(cwd)
+
+    def clean_covariances(self):
     
+        print 'Cleaning covariances for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
+        
+        cwd = os.getcwd()
+        
+        if not os.path.exists(self.basedir):
+            print 'Covariance error! basedir does not exist: ' + self.basedir
+            return
+
+        os.chdir(self.basedir)
+        
+        if not os.path.exists(self.cosmo.name):
+            print 'Covariance error! simulation dir does not exist: ' + self.cosmo.name
+            return
+
+        os.chdir(self.cosmo.name)
+    
+        workingdir = os.getcwd()
+        
+        for i in range(1,self.nsim+1):
+            os.chdir(workingdir)
+            
+            rundir = 'r' + str(i)
+            
+            if not os.path.exists(rundir):
+                print 'Covariance error! rundir does not exist: ' + rundir
+                return
+        
+            os.chdir(rundir)
+            
+            for j in range(1,self.nnoise+1):
+            
+                cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
+                
+                if os.path.exists(cov_output):
+                    os.remove(cov_output)
+        
+        os.chdir(cwd)
+
+
     def combine_covariances(self):
 
         cwd = os.getcwd()
@@ -812,12 +892,15 @@ def measure_data(infile,outfile,analysis):
         
         ranges.append(a_range)
         
+        xlen = xlen+len(a_x)
+        
         info.append(a.info)
         
         x.extend(a_x)
 
         if map_size not in mdata.keys():
             mdata[map_size] = healpy.pixelfunc.ud_grade(map_data_raw,map_size,power=-2,order_in='NESTED',order_out='NESTED')
+
 
     for n in range(divs):
         
