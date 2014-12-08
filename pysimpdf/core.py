@@ -821,69 +821,33 @@ def measure_data(infile,outfile,analysis):
 
     numpy.savez(outfile,x=x,m=measurements,r=ranges)
 
-def calc_covariance(infile,outfile,analysis):
-        
-    map_data_raw = healpy.fitsfunc.read_map(infile, dtype=numpy.float32)
-
-    mdata = {}
-
-    adict = analysis.adict
-
-    for key in adict.keys():
-        pdf = pdf_dict[key]
-        
-        nside = pdf[0]
-        divs = pdf[1]
-        bins = pdf[2]
-        mass_range = pdf[3]
-
-        if nside not in mdata.keys():
-            mdata[nside] = healpy.pixelfunc.ud_grade(map_data_raw,nside,power=-2,order_in='NESTED',order_out='NESTED')
-
-
-    data = []
+def calc_covariance(infile,outfile):
     
+    data = numpy.load(infile)
+    
+    x = data['x']
+    m = data['m']
+    r = data['r']
+    
+    n = len(x)
+    
+    mean = numpy.zeros(n,dtype=numpy.float32)
+    cov = numpy.zeros((n,n),dtype=numpy.float32)
+    
+    count = 0
+    
+    for i in m:
+        mean += i
+        count += 1
+        for x in range(n):
+            for y in range(n):
+                cov[x][y] += i[x] * i[y]
 
-    for n in range(divs):
+    if count > 0:
+        mean = mean / float(count)
+        cov = cov / float(count)
         
-    
-    for key in outfiles.keys():
-        
-        outfile = outfiles[key]
-        pdf = pdfs[key]
-        
-        print 'Calculating covariances: ' + infile + ' -> ' + outfile
-    
-        mean_dict = {}
-        cov_dict = {}
-
-        map_size = pdf[0]
-        divs = pdf[1]
-        bins = pdf[2]
-        mass_range = pdf[3]
-        
-        mean = numpy.zeros(bins,dtype=numpy.float32)
-        cov = numpy.zeros((bins,bins),dtype=numpy.float32)
-        
-        map_temp = healpy.pixelfunc.ud_grade(map_data,map_size,power=-2,order_in='NESTED',order_out='NESTED')
-        
-        npix = healpy.pixelfunc.nside2npix(map_size)
-        
-        for n in range(divs):
-            temp = map_temp[npix/divs*n:npix/divs*(n+1)]
-            temp = temp - numpy.mean(temp)
-            hist,bin_edges = numpy.histogram(temp, bins=bins, range=mass_range)
-            mean += hist
-            for x in range(bins):
-                for y in range(bins):
-                    cov[x][y] += hist[x] * hist[y]
-        
-        mean = mean / float(divs)
-        cov = cov / float(divs)
-    
-        x = 0.5*(bin_edges[1:]+bin_edges[:-1])
-    
-        numpy.savez(outfile,x=x,mean=mean,cov=cov)
+    numpy.savez(outfile,x=x,mean=mean,cov=cov,r=r)
 
 def avg_covariances(infiles,outfile,pdf):
 
