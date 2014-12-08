@@ -931,14 +931,14 @@ def calc_covariance(infile,outfile):
     
     data = numpy.load(infile)
     
-    x = data['x']
-    m = data['m']
+    x = numpy.array(data['x'],dtype=numpy.float64)
+    m = numpy.array(data['m'],dtype=numpy.float64)
     r = data['r']
     info = data['info']
     
     n = len(x)
     
-    mean = numpy.zeros(n,dtype=numpy.float32)
+    mean = numpy.zeros(n,dtype=numpy.float64)
     cov = numpy.zeros((n,n),dtype=numpy.float64)
     
     count = 0

@@ -4,7 +4,7 @@ from pysimpdf.core import Simulation
 
 nsim_fid = 20
 nsim_delta = 5
-nnoise = 1
+nnoise = 5
 
 f = ['f', 0.0, nsim_fid, nnoise]
 
@@ -15,9 +15,7 @@ t = [['h', 0.76, nsim_delta, nnoise],
      ['w', -0.90, nsim_delta, nnoise],
      ['q', 1.1, nsim_delta, nnoise]]
 
-#l = [f] + t
-
-l = t
+l = [f] + t
 
 print l
 
@@ -33,11 +31,6 @@ for i in l:
     ls.append(Simulation(basedir,i,adict,aname))
 
 for s in ls:
-    s.run_pinocchio()
-
-for s in ls:
-    s.convert_healpix()
-    s.add_noise()
-    s.measure_data()
-    s.generate_covariances()
+    s.clean_measures()
+    s.clean_covariances()
 
