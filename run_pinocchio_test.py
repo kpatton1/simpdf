@@ -28,7 +28,7 @@ aname='fullcov'
 
 basedir='data'
 
-fs = Simulation(basedir,f,nside,maps)
+fs = Simulation(basedir,i,adict,aname)
 
 ts = []
 
