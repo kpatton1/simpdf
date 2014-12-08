@@ -2,8 +2,8 @@
 import os
 from pysimpdf.core import Simulation
 
-nsim_fid = 1
-nsim_delta = 1
+nsim_fid = 20
+nsim_delta = 5
 nnoise = 1
 
 f = ['f', 0.0, nsim_fid, nnoise]
