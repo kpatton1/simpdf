@@ -805,9 +805,14 @@ def measure_data(infile,outfile,analysis):
 
     for n in range(divs):
         
+        print 'div ' + str(n)
+        
         measurement = []
         
+        acount = 0
+        
         for a in alist:
+            print 'analysis ' + str(acount)
             map_size = a.map_size
             npix = healpy.pixelfunc.nside2npix(map_size)
             data = mdata[map_size][npix/divs*n:npix/divs*(n+1)]
@@ -816,6 +821,8 @@ def measure_data(infile,outfile,analysis):
             a_m = a.process_data(data)
 
             measurement.extend(a_m)
+        
+            acount += 1
 
         measurements.append(measurement)
 
