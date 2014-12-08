@@ -422,13 +422,13 @@ class Simulation:
             os.chdir(rundir)
             
             for j in range(1,self.nnoise+1):
-                noise_output = 'noise_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
+                noise_output = 'noise_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
                 
                 if not os.path.exists(noise_output):
                     print 'Measurement error! noise output does not exist: ' + noise_output
                     continue
 
-                measure_output = 'measure_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
+                measure_output = 'measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
                 
                 if not os.path.exists(measure_output):
                     measure_data(noise_output, measure_output, self.analysis)
@@ -469,13 +469,13 @@ class Simulation:
 
             for j in range(1,self.nnoise+1):
 
-                measure_output = 'measure_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
+                measure_output = 'measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
                 
                 if not os.path.exists(measure_output):
                     print 'Covariance error! measurement output does not exist: ' + measure_output
                     continue
                 
-                cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
+                cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
 
                 if not os.path.exists(cov_output):
                     calc_covariances(measure_output, cov_output)
@@ -519,7 +519,7 @@ class Simulation:
                 os.chdir(rundir)
 
                 for j in range(1,self.nnoise+1):
-                    cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '_' + rundir + 'n' + str(j) + '.npz'
+                    cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '_' + rundir + 'n' + str(j) + '.npz'
                     
                     cov_output = os.path.abspath(cov_output)
 
@@ -530,7 +530,7 @@ class Simulation:
                     cov_outputs.append(cov_output)
 
             
-            avg_cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            avg_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
 
             os.chdir(workingdir)
 
@@ -578,8 +578,8 @@ class Simulation:
 
         for key in self.analysis.pdfs.keys():
 
-            delta_cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
-            fid_cov_output = 'cov_' + str(fid.analysis.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + str(key) + '.npz'
+            delta_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            fid_cov_output = 'cov_' + str(fid.survey.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + str(key) + '.npz'
 
             delta_cov_output = self.basedir + '/' + self.cosmo.name + '/' + delta_cov_output
             fid_cov_output = fid.basedir + '/' + fid.cosmo.name + '/' + fid_cov_output
@@ -592,7 +592,7 @@ class Simulation:
                 print 'Covariance differencing error! fiducial cov output does not exist: ' + fid_cov_output
                 continue
 
-            dcov_out = 'dcov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            dcov_out = 'dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
 
             diff_covariances(delta_cov_output, fid_cov_output, dcov_out, delta)
                 
@@ -610,7 +610,7 @@ class Simulation:
 
         for key in self.analysis.pdfs.keys():
 
-            fid_cov_output = 'cov_' + str(self.analysis.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            fid_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
             fid_cov_output = self.basedir + '/' + self.cosmo.name + '/' + fid_cov_output
 
             if not os.path.exists(fid_cov_output):
