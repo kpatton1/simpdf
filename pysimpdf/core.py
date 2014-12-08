@@ -706,7 +706,7 @@ class Simulation:
         params = []
 
         for delta in deltas:
-            dcov_out = 'dcov_' + str(delta.analysis.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + delta.analysis.name + '.npz'
+            dcov_out = 'dcov_' + str(delta.survey.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + delta.analysis.name + '.npz'
             dcov_out = delta.basedir + '/' + dcov_out
             
             if not os.path.exists(dcov_out):
@@ -723,7 +723,7 @@ class Simulation:
         for r in ranges:
             code = code + str(r)
 
-        fisher_out = 'F_' + str(delta.analysis.nside) + '_' + self.analysis.name + '_' + code + '.npz'
+        fisher_out = 'F_' + str(delta.survey.nside) + '_' + self.analysis.name + '_' + code + '.npz'
 
         calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges)
                 
