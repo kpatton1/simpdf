@@ -480,7 +480,7 @@ class Simulation:
                 cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
 
                 if not os.path.exists(cov_output):
-                    calc_covariances(measure_output, cov_output)
+                    calc_covariance(measure_output, cov_output)
                         
                 if not os.path.exists(cov_output):
                     print 'Covariance error! could not generate: ' + cov_output
