@@ -863,7 +863,7 @@ def calc_covariance(infile,outfile):
     for i in m:
         mean += i
         count += 1
-        cov[x][y] += numpy.outer(i,i)
+        cov += numpy.outer(i,i)
 
     if count > 0:
         mean = mean / float(count)
