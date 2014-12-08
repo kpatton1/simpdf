@@ -856,7 +856,7 @@ def calc_covariance(infile,outfile):
     n = len(x)
     
     mean = numpy.zeros(n,dtype=numpy.float32)
-    cov = numpy.zeros((n,n),dtype=numpy.float32)
+    cov = numpy.zeros((n,n),dtype=numpy.float64)
     
     count = 0
     
