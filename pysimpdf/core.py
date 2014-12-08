@@ -611,7 +611,7 @@ class Simulation:
                 os.chdir(rundir)
 
                 for j in range(1,self.nnoise+1):
-                    cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '_' + rundir + 'n' + str(j) + '.npz'
+                    cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
                     
                     cov_output = os.path.abspath(cov_output)
 
@@ -622,7 +622,7 @@ class Simulation:
                     cov_outputs.append(cov_output)
 
             
-            avg_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            avg_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
 
             os.chdir(workingdir)
 
@@ -670,8 +670,8 @@ class Simulation:
 
         for key in self.analysis.pdfs.keys():
 
-            delta_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
-            fid_cov_output = 'cov_' + str(fid.survey.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + str(key) + '.npz'
+            delta_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+            fid_cov_output = 'cov_' + str(fid.survey.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + fid.analysis.name + '.npz'
 
             delta_cov_output = self.basedir + '/' + self.cosmo.name + '/' + delta_cov_output
             fid_cov_output = fid.basedir + '/' + fid.cosmo.name + '/' + fid_cov_output
@@ -684,13 +684,13 @@ class Simulation:
                 print 'Covariance differencing error! fiducial cov output does not exist: ' + fid_cov_output
                 continue
 
-            dcov_out = 'dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            dcov_out = 'dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
 
             diff_covariances(delta_cov_output, fid_cov_output, dcov_out, delta)
                 
         os.chdir(cwd)
 
-    def calc_fisher(self, deltas):
+    def calc_fisher(self, deltas, ranges):
         
         cwd = os.getcwd()
         
@@ -702,7 +702,7 @@ class Simulation:
 
         for key in self.analysis.pdfs.keys():
 
-            fid_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + str(key) + '.npz'
+            fid_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
             fid_cov_output = self.basedir + '/' + self.cosmo.name + '/' + fid_cov_output
 
             if not os.path.exists(fid_cov_output):
@@ -713,7 +713,7 @@ class Simulation:
             params = []
 
             for delta in deltas:
-                dcov_out = 'dcov_' + str(delta.analysis.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + str(key) + '.npz'
+                dcov_out = 'dcov_' + str(delta.analysis.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + delta.analysis.name + '.npz'
                 dcov_out = delta.basedir + '/' + dcov_out
                 
                 if not os.path.exists(dcov_out):
@@ -725,9 +725,14 @@ class Simulation:
                 dcov_outs.append(dcov_out)
                 params.append(param)
 
-            fisher_out = 'F_' + str(delta.analysis.nside) + '_' + str(key) + '.npz'
+            code = ''
 
-            calc_fisher(fid_cov_output, dcov_outs, params, fisher_out)
+            for r in ranges:
+                code = code + str(r)
+
+            fisher_out = 'F_' + str(delta.analysis.nside) + '_' + self.analysis.name + '_' + code + '.npz'
+
+            calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges)
                 
         os.chdir(cwd)
 
@@ -954,22 +959,25 @@ def calc_covariance(infile,outfile):
         
     numpy.savez(outfile,x=x,mean=mean,cov=cov,r=r,info=info)
 
-def avg_covariances(infiles,outfile,pdf):
+def avg_covariances(infiles,outfile):
 
-    map_size = pdf[0]
-    divs = pdf[1]
-    bins = pdf[2]
-    mass_range = pdf[3]
-
-    mean_avg = numpy.zeros(bins,dtype=numpy.float32)
-    cov_avg = numpy.zeros((bins,bins),dtype=numpy.float32)
     count = 0.0
+    
+    first = True
     
     for f in infiles:
         
         data = numpy.load(f)
+        
+        if first:
+            x = data['x']
+            info = data['info']
+            r = data['r']
+            bins = len(x)
+            mean_avg = numpy.zeros(bins,dtype=numpy.float64)
+            cov_avg = numpy.zeros((bins,bins),dtype=numpy.float64)
+            first = False
 
-        x = data['x']
         cov = data['cov']
         mean = data['mean']
 
@@ -980,7 +988,7 @@ def avg_covariances(infiles,outfile,pdf):
     mean_avg = mean_avg / count
     cov_avg = cov_avg / count
 
-    numpy.savez(outfile, x=x, mean=mean_avg, cov=cov_avg)
+    numpy.savez(outfile, x=x, mean=mean_avg, cov=cov_avg, r=r, info=info)
 
 def diff_covariances(infile, fidfile, outfile, delta):
 
@@ -991,6 +999,9 @@ def diff_covariances(infile, fidfile, outfile, delta):
 
     data_mean = data['mean']
     data_cov = data['cov']
+    
+    data_r = data['r']
+    data_info = data['info']
 
     fid_mean = fid['mean']
     fid_cov = fid['cov']
@@ -998,27 +1009,37 @@ def diff_covariances(infile, fidfile, outfile, delta):
     diff_mean = (data_mean - fid_mean) / delta
     diff_cov = (data_cov - fid_cov) / delta
 
-    numpy.savez(outfile, x=data_x, mean=diff_mean, cov=diff_cov)
+    numpy.savez(outfile, x=data_x, mean=diff_mean, cov=diff_cov, r=data_r, info=data_info)
 
 
-def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out):
+def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
     
     fid = numpy.load(fid_cov_output)
 
     mean = fid['mean']
     cov = fid['cov']
+    
+    r = fid['r']
+    
+    filter1 = []
+    
+    for n in ranges:
+        r1 = r[n][0]
+        r2 = r[n][1]
+        filter1.extend(range(r1,r2))
 
-    for i in range(len(mean)):
-        for j in range(len(mean)):
-            cov[i][j] -= mean[i]*mean[j]
+    cov = cov - numpy.outer(mean, mean)
 
-    cov_range = []
+    mean = mean[filter1]
+    cov = cov[filter1][:,filter1]
+
+    filter2 = []
 
     for i in range(len(mean)):
         if cov[i][i] != 0.0:
-            cov_range.append(i)
+            filter2.append(i)
 
-    cov = cov[cov_range][:,cov_range]
+    cov = cov[filter2][:,filter2]
 
     cov_inv = numpy.linalg.inv(cov)
 
@@ -1032,7 +1053,8 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out):
         data = numpy.load(dcov_out)
         diff = data['mean']
         #print numpy.shape(diff)
-        diff = diff[cov_range]
+        diff = diff[filter1]
+        diff = diff[filter2]
         #print diff
         #print numpy.shape(diff)
         diffs.append(diff)
