@@ -1034,7 +1034,7 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
 
     cov = cov[filter2][:,filter2]
 
-    cov_inv = numpy.linalg.inv(cov)
+    e,v = numpy.linalg.eigh(cov)
 
     n = len(dcov_outs)
 
@@ -1042,30 +1042,31 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
 
     for dcov_out in dcov_outs:
 
-        #print dcov_out
         data = numpy.load(dcov_out)
         diff = data['mean']
-        #print numpy.shape(diff)
+
         diff = diff[filter1]
         diff = diff[filter2]
-        #print diff
-        #print numpy.shape(diff)
+
         diffs.append(diff)
         
     F = numpy.zeros([n,n])
 
     for i in range(n):
         for j in range(n):
-            #print numpy.shape(diffs[i])
-            #print numpy.shape(cov_inv)
-            #print numpy.shape(diffs[j])
 
-            #print diffs[i]
-            #print cov_inv
-            #print diffs[j]
+            d = 0.0
 
-            d = numpy.dot(diffs[i], numpy.dot(cov_inv, diffs[j]))
-            #print d
+            for l in range(len(e)):
+                el = e[l]
+
+                #if el <= 1000.0:
+                #    continue
+
+                vl = v[l]
+
+                d = d + numpy.dot(diffs[i], vl) * numpy.dot(diffs[j], vl) / el
+
             F[i][j] = d
 
     F_inv = numpy.linalg.inv(F)
