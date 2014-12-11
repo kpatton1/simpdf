@@ -1034,7 +1034,26 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
 
     cov = cov[filter2][:,filter2]
 
-    e,v = numpy.linalg.eigh(cov)
+    #e,v = numpy.linalg.eigh(cov)
+
+    sd = numpy.zeros(len(cov), dtype=numpy.float64)
+
+    for i in range(len(cov)):
+        sd[i] = numpy.sqrt(cov[i][i])
+
+    for i in range(len(cov)):
+        for j in range(len(cov)):
+            cov[i][j] = cov[i][j] / sd[i] / sd[j]
+
+    trace = numpy.trace(cov)
+
+    #shrink = 0.00000000001
+    #shrink = 1e-16
+    shrink = 1e-8
+
+    cov = (1.0 - shrink) * cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
+
+    cov_inv = numpy.linalg.inv(cov)
 
     n = len(dcov_outs)
 
@@ -1047,6 +1066,9 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
 
         diff = diff[filter1]
         diff = diff[filter2]
+        
+        for i in range(len(diff)):
+            diff[i] = diff[i] / sd[i]
 
         diffs.append(diff)
         
@@ -1057,15 +1079,15 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
 
             d = 0.0
 
+            '''
             for l in range(len(e)):
                 el = e[l]
-
-                #if el <= 1000.0:
-                #    continue
 
                 vl = v[l]
 
                 d = d + numpy.dot(diffs[i], vl) * numpy.dot(diffs[j], vl) / el
+            '''
+            d = numpy.dot(diffs[i], numpy.dot(cov_inv, diffs[j]))
 
             F[i][j] = d
 

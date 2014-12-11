@@ -12,7 +12,7 @@ fisher2 = 'data/F_8192_fullcov_7.npz'
 
 fisher3 = 'data/F_8192_fullcov_07.npz'
 
-fisher4 = 'data/F_8192_fullcov_0372.npz'
+#fisher4 = 'data/F_8192_fullcov_0372.npz'
 
 
 
@@ -33,8 +33,8 @@ F2 = data['F']
 data = numpy.load(fisher3)
 F3 = data['F']
 
-data = numpy.load(fisher4)
-F4 = data['F']
+#data = numpy.load(fisher4)
+#F4 = data['F']
 
 n = len(params)
 
@@ -42,12 +42,12 @@ names = params
 
 centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0}
 
-print F
+print F3
 
 F[-1,-1] += 1/(0.1*0.1)
 F2[-1,-1] += 1/(0.1*0.1)
 F3[-1,-1] += 1/(0.1*0.1)
-F4[-1,-1] += 1/(0.1*0.1)
+#F4[-1,-1] += 1/(0.1*0.1)
 
 def plot_fisher(F, basetitle, i,j, color, rescale=False):
     
@@ -91,7 +91,7 @@ for i in range(n):
 
         handles = []
 
-        plot_fisher(F, basetitle, i,j,'blue',True)
+        plot_fisher(F, basetitle, i,j,'blue',False)
 
         plt.plot([],color='blue',label='PS 256')
 
@@ -104,5 +104,8 @@ for i in range(n):
         plt.plot([],color='red',label='PS 256 + PDF 1024')
         
         plt.legend()
+        
+        plt.xlim([0.21,0.37])
+        plt.ylim([0.75,0.89])
 
         plt.show()

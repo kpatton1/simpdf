@@ -55,12 +55,14 @@ ls = ts + [fs]
 #    s.diff_covariances(fs)
 
 fs.calc_fisher(ts,[0])
-
-fs.calc_fisher(ts,[3])
-fs.calc_fisher(ts,[0,3])
-
 fs.calc_fisher(ts,[7])
 fs.calc_fisher(ts,[0,7])
 
-fs.calc_fisher(ts,[0,3,7,2])
+#fs.calc_fisher(ts,[3])
+#fs.calc_fisher(ts,[0,3])
+
+#fs.calc_fisher(ts,[7])
+#fs.calc_fisher(ts,[0,7])
+
+#fs.calc_fisher(ts,[0,3,7,2])
 #fs.calc_fisher(ts,[3,1,7,4,2,6,5])

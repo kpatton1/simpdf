@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 #fisher = 'data/F_8192_4096.npz'
-fisher = 'data/F_8192_fullcov_0.npz'
+fisher = 'data/F_8192_fullcov_7.npz'
 
 data = numpy.load(fisher)
 

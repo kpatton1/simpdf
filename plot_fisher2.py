@@ -33,6 +33,9 @@ F_noq = F[:-1,:-1]
 F_priorq = F.copy()
 F_priorq[-1,-1] += 1/(0.1*0.1)
 
+for p in params:
+    print p
+
 def plot_fisher(F, basetitle, color, rescale=False):
     
     F_inv = numpy.linalg.inv(F)
