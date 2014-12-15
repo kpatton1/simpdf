@@ -193,6 +193,75 @@ class SimulationSet:
 class Simulation:
 
     
+    def pinocchio_output(i):
+        pinocchio_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + '/pinocchio.' + self.cosmo.name + '_r' + str(i) + '.plc.out'
+        return pinocchio_output
+
+    def healpix_output(i):
+        healpix_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + '/healpix_' + str(self.survey.nside) + '_' + self.cosmo.name + '_r' + str(i) + '.fits'
+        return healpix_output
+
+    def noise_output(i,j):
+        noise_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + + '/noise_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_r' + str(i) + 'n' + str(j) + '.fits'
+        return noise_output
+
+    def measure_output(i,j):
+        measure_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_r' + str(i) + 'n' + str(j) + '.npz'
+        return measure_output
+
+    def combined_measure_output():
+        combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        return combined_measure_output
+
+    def combined_cov_output():
+        combined_cov_output = self.basedir + '/' + self.cosmo.name + '/cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        return combined_cov_output
+
+    def cosmodir():
+        cosmoir = self.basedir + '/' + self.cosmo.name
+        return cosmodir
+
+    def rundir(i):
+        rundir = self.basedir + '/' + self.cosmo.name + '/r' + str(i)
+        return rundir
+
+    def check_dir(d):
+        if not os.path.exists(d):
+            os.mkdir(d)
+        elif not os.path.isdir(d):
+            print 'Error! Invalid directory: ' + d
+            return True
+
+        if not os.path.exists(self.basedir):
+            print 'Error! Could not create directory: ' + d
+            return True
+        
+        return False
+
+    def check_basedir():
+
+        d = self.basedir
+
+        return self.check_dir(d)
+
+    def check_cosmodir():
+
+        if self.check_basedir():
+            return True
+
+        d = self.cosmodir()
+
+        return self.check_dir(d)
+
+    def check_rundir(i):
+
+        if self.check_cosmodir():
+            return True
+
+        d = self.rundir(i)
+
+        return self.check_dir(d)
+        
 
     def __init__(self,basedir,t,adict,aname='fiducial'):
         
@@ -253,36 +322,13 @@ class Simulation:
         
         cwd = os.getcwd()
         
-        if not os.path.exists(self.basedir):
-            print 'Pinocchio error! basedir does not exist: ' + self.basedir
-            return
-
-        os.chdir(self.basedir)
-
-        if not os.path.exists(self.cosmo.name):
-            os.mkdir(self.cosmo.name)
-
-        if not os.path.exists(self.cosmo.name):
-            print 'Pinocchio error! could not create simulation dir: ' + self.cosmo.name
-            return
-        
-        os.chdir(self.cosmo.name)
-
-        workingdir = os.getcwd()
-        
         for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
-            
-            rundir = 'r' + str(i)
-            
-            if not os.path.exists(rundir):
-                os.mkdir(rundir)
-                
-            if not os.path.exists(rundir):
-                print 'Pinocchio error! could not create rundir: ' + rundir
+
+            if self.check_rundir():
+                os.chdir(cwd)
                 return
-            
-            os.chdir(rundir)
+
+            os.chdir(self.rundir())
                     
             if not os.path.exists('parameters') or not os.path.exists('outputs'):
                 self.cosmo.seed = i
@@ -290,15 +336,17 @@ class Simulation:
 
             if not os.path.exists('parameters') or not os.path.exists('outputs'):
                 print 'Pinocchio error! could not create parameter files'
+                os.chdir(cwd)
                 return
 
-            pinocchio_output = 'pinocchio.' + self.cosmo.name + '_' + rundir + '.plc.out'
+            pinocchio_output = self.pinocchio_output(i)
 
             if not os.path.exists(pinocchio_output):
                 run_pinocchio_simulation()
 
             if not os.path.exists(pinocchio_output):
                 print 'Pinocchio error! could not generate output: ' + str(pinocchio_output)
+                os.chdir(cwd)
                 return
 
         os.chdir(cwd)
@@ -382,7 +430,7 @@ class Simulation:
             
             os.chdir(rundir)
 
-            healpix_output = 'healpix_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
+            
                 
             if not os.path.exists(healpix_output):
                 print 'Noise error! healpix output does not exist: ' + healpix_output
@@ -432,13 +480,13 @@ class Simulation:
             os.chdir(rundir)
             
             for j in range(1,self.nnoise+1):
-                noise_output = 'noise_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
+                
                 
                 if not os.path.exists(noise_output):
                     print 'Measurement error! noise output does not exist: ' + noise_output
                     continue
 
-                measure_output = 'measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
+                
                 
                 if not os.path.exists(measure_output):
                     measure_data(noise_output, measure_output, self.analysis)
@@ -1039,19 +1087,18 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
     sd = numpy.zeros(len(cov), dtype=numpy.float64)
 
     for i in range(len(cov)):
-        sd[i] = numpy.sqrt(cov[i][i])
+       sd[i] = numpy.sqrt(cov[i][i])
 
     for i in range(len(cov)):
-        for j in range(len(cov)):
+       for j in range(len(cov)):
             cov[i][j] = cov[i][j] / sd[i] / sd[j]
-
-    trace = numpy.trace(cov)
 
     #shrink = 0.00000000001
     #shrink = 1e-16
-    shrink = 1e-8
+    #shrink = 1e-28
 
-    cov = (1.0 - shrink) * cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
+    shrink = 1e-12
+    cov = cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
 
     cov_inv = numpy.linalg.inv(cov)
 
