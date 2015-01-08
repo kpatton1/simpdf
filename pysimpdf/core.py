@@ -9,7 +9,7 @@ PINOCCHIO_CORE_SURVEY_DEFAULT_ZS=0.8
 PINOCCHIO_CORE_SURVEY_DEFAULT_Q=1.0
 
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME='test'
-PINOCCHIO_CORE_ANALYSIS_DEFAULT_ADICT={}
+PINOCCHIO_CORE_ANALYSIS_DEFAULT_ALIST=[]
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_DIVS=384
 
 PINOCCHIO_CORE_SIMPARAMS_DEFAULT_ZPLC=0.6
@@ -48,28 +48,30 @@ class Survey:
 
 class Analysis:
     
-    def __init__(self, name=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME, adict=PINOCCHIO_CORE_ANALYSIS_DEFAULT_ADICT, divs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_DIVS):
+    def __init__(self, name=PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME, alist=PINOCCHIO_CORE_ANALYSIS_DEFAULT_ALIST, divs=PINOCCHIO_CORE_ANALYSIS_DEFAULT_DIVS):
 
         self.name = name
-        self.adict = adict
+        self.alist_orig = alist
         self.divs = divs
 
         self.alist = []
 
-        for n,t in adict.keys():
-            params = adict[(n,t)]
+        for a in alist:
+
+            n = a[0]
+            t = a[1]
             
             if t == 'pdf':
                 map_size = n
                 
-                bins = params[0]
-                bin_min = params[1]
-                bin_max = params[2]
+                bins = a[2]
+                bin_min = a[3]
+                bin_max = a[4]
 
-                a = AnalysisPDF(n, self.divs, bins, bin_min, bin_max)
-                a.info = ((n,t),params)
+                a_pdf = AnalysisPDF(n, self.divs, bins, bin_min, bin_max)
+                a_pdf.info = a
 
-                self.alist.append(a)
+                self.alist.append(a_pdf)
 
             elif t == 'ps':
                 map_size = n
@@ -77,14 +79,75 @@ class Analysis:
                 lmin = 0
                 lmax = 3 * map_size
                 
-                a = AnalysisPS(n, self.divs, lmin, lmax)
-                a.info = ((n,t),params)
+                a_ps = AnalysisPS(n, self.divs, lmin, lmax)
+                a_ps.info = a
 
-                self.alist.append(a)
+                self.alist.append(a_ps)
 
             else:
                 print 'Error! Unknown analysis type: ' + str(t)
-                print str((n,t)) + ' -> ' + str(params)
+                print a
+
+    def process(self, map_data_raw):
+
+        scaled_maps = {}
+
+        divs = self.divs
+        alist = self.alist
+
+        measurements = []
+    
+        x = []
+        
+        ranges = []
+        
+        info = []
+        
+        xlen = 0
+        
+        for a in alist:
+            map_size = a.map_size
+            
+            a_x = a.x()
+            
+            a_range = (xlen,xlen+len(a_x))
+            
+            ranges.append(a_range)
+            
+            xlen = xlen+len(a_x)
+        
+            info.append(a.info)
+
+            x.extend(a_x)
+            
+            if map_size not in scaled_maps.keys():
+                scaled_maps[map_size] = healpy.pixelfunc.ud_grade(map_data_raw,map_size,power=-2,order_in='NESTED',order_out='NESTED',dtype=numpy.float64)
+
+        for n in range(divs):
+        
+            print 'div ' + str(n)
+        
+            measurement = []
+        
+            acount = 0
+            
+            for a in alist:
+                print 'analysis ' + str(acount)
+                map_size = a.map_size
+                npix = healpy.pixelfunc.nside2npix(map_size)
+                chunk = scaled_maps[map_size][npix/divs*n:npix/divs*(n+1)]
+                chunk = chunk - numpy.mean(chunk)
+
+                a_m = a.process_chunk(chunk)
+
+                measurement.extend(a_m)
+                
+                acount += 1
+
+            measurements.append(measurement)
+
+        return measurements,x,ranges,info
+
 
 class AnalysisPS:
 
@@ -109,7 +172,7 @@ class AnalysisPS:
 
         return x
 
-    def process_data(self, data):
+    def process_chunk(self, data):
 
         npix = healpy.pixelfunc.nside2npix(self.map_size)
 
@@ -142,109 +205,75 @@ class AnalysisPDF:
 
         return x
 
-    def process_data(self, data):
+    def process_chunk(self, data):
         
         hist,bin_edges = numpy.histogram(data, bins=self.bins, range=(self.bin_min,self.bin_max))
 
         return hist
-        
-
-class SimulationSet:
-
-    def __init__(self, basedir, fiducial, sim_types, map_sizes, bins, mass_range):
-        
-
-        self.sims = sims
-        self.basedir = basedir
-        self.bins = bins
-        self.mass_range = mass_range
-
-        self.sims = {}
-        #self.fiducial =
-        
-        type_key = fiducial[0]
-        type_delta = fiducial[1]
-        type_num_sims = fiducial[2]
-        type_num_noise = fiducial[3]
-        
-        type_name = type_key + '_' + str(type_delta)
-            
-
-        for t in self.types:
-            type_key = t[0]
-            type_delta = t[1]
-            type_num_sims = t[2]
-            type_num_noise = t[3]
-
-            type_name = type_key + '_' + str(type_delta)
-            
-            if type_name in self.sims:
-                print 'Error! Already simulation type: ' + type_name
-                continue
-            
-            temp_cosmo = Cosmology(seed=i)
-            temp_sim = Simulation(temp_cosmo)
-        
-            self.sims[type_key].append(temp_sim)
-            
-
-
 
 class Simulation:
 
     
-    def pinocchio_output(i):
+    def pinocchio_output(self,i):
         pinocchio_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + '/pinocchio.' + self.cosmo.name + '_r' + str(i) + '.plc.out'
         return pinocchio_output
 
-    def healpix_output(i):
+    def healpix_output(self,i):
         healpix_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + '/healpix_' + str(self.survey.nside) + '_' + self.cosmo.name + '_r' + str(i) + '.fits'
         return healpix_output
 
-    def noise_output(i,j):
-        noise_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + + '/noise_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_r' + str(i) + 'n' + str(j) + '.fits'
+    def noise_output(self,i,j):
+        noise_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + '/noise_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_r' + str(i) + 'n' + str(j) + '.fits'
         return noise_output
 
-    def measure_output(i,j):
+    def measure_output(self,i,j):
         measure_output = self.basedir + '/' + self.cosmo.name + '/r' + str(i) + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_r' + str(i) + 'n' + str(j) + '.npz'
         return measure_output
 
-    def combined_measure_output():
+    def combined_measure_output(self):
         combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
         return combined_measure_output
 
-    def combined_cov_output():
-        combined_cov_output = self.basedir + '/' + self.cosmo.name + '/cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-        return combined_cov_output
+    def cov_output(self):
+        cov_output = self.basedir + '/' + self.cosmo.name + '/cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        return cov_output
 
-    def cosmodir():
-        cosmoir = self.basedir + '/' + self.cosmo.name
+    def dcov_output(self):
+        dcov_output = self.basedir + '/' + self.cosmo.name + '/dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        return dcov_output
+
+    def fisher_output(self,code):
+        fisher_output = self.basedir + '/F_' + str(self.survey.nside) + '_' + self.analysis.name + '_' + code + '.npz'
+        return fisher_output
+
+    def cosmodir(self):
+        cosmodir = self.basedir + '/' + self.cosmo.name
         return cosmodir
 
-    def rundir(i):
+    def rundir(self,i):
         rundir = self.basedir + '/' + self.cosmo.name + '/r' + str(i)
         return rundir
 
-    def check_dir(d):
+    def check_dir(self,d):
         if not os.path.exists(d):
             os.mkdir(d)
         elif not os.path.isdir(d):
             print 'Error! Invalid directory: ' + d
             return True
 
-        if not os.path.exists(self.basedir):
+        if not os.path.exists(d):
             print 'Error! Could not create directory: ' + d
             return True
         
         return False
 
-    def check_basedir():
+    def check_basedir(self):
 
         d = self.basedir
 
         return self.check_dir(d)
 
-    def check_cosmodir():
+    def check_cosmodir(self):
 
         if self.check_basedir():
             return True
@@ -253,7 +282,7 @@ class Simulation:
 
         return self.check_dir(d)
 
-    def check_rundir(i):
+    def check_rundir(self,i):
 
         if self.check_cosmodir():
             return True
@@ -263,7 +292,7 @@ class Simulation:
         return self.check_dir(d)
         
 
-    def __init__(self,basedir,t,adict,aname='fiducial'):
+    def __init__(self,basedir,t,alist,aname='fiducial'):
         
         self.basedir = os.path.abspath(basedir)
         
@@ -288,7 +317,7 @@ class Simulation:
 
         self.cosmo = Cosmology(name=cname)
         self.survey = Survey(name=sname)
-        self.analysis = Analysis(name=aname,adict=adict)
+        self.analysis = Analysis(name=aname,alist=alist)
         self.simparams = SimParams()
 
         if param == 'h':
@@ -324,15 +353,15 @@ class Simulation:
         
         for i in range(1,self.nsim+1):
 
-            if self.check_rundir():
+            if self.check_rundir(i):
                 os.chdir(cwd)
                 return
 
-            os.chdir(self.rundir())
+            os.chdir(self.rundir(i))
                     
             if not os.path.exists('parameters') or not os.path.exists('outputs'):
                 self.cosmo.seed = i
-                generate_parameter_files(self.cosmo, self.cosmo.name + '_' + rundir,self.simparams)
+                generate_parameter_files(self.cosmo, self.cosmo.name + '_r' + str(i),self.simparams)
 
             if not os.path.exists('parameters') or not os.path.exists('outputs'):
                 print 'Pinocchio error! could not create parameter files'
@@ -355,40 +384,15 @@ class Simulation:
         
         print 'Converting to healpix for ' + str(self.cosmo.name)
         
-        cwd = os.getcwd()
-
-        if not os.path.exists(self.basedir):
-            print 'Healpix error! basedir does not exist: ' + self.basedir
-            return
-
-        os.chdir(self.basedir)
-
-        if not os.path.exists(self.cosmo.name):
-            print 'Healpix error! simulation dir does not exist: ' + self.cosmo.name
-            return
-        
-        os.chdir(self.cosmo.name)
-
-        workingdir = os.getcwd()
-        
         for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
             
-            rundir = 'r' + str(i)
-                
-            if not os.path.exists(rundir):
-                print 'Healpix error! rundir does not exist: ' + rundir
-                return
-            
-            os.chdir(rundir)
-            
-            pinocchio_output = 'pinocchio.' + self.cosmo.name + '_' + rundir + '.plc.out'
+            pinocchio_output = self.pinocchio_output(i)
 
             if not os.path.exists(pinocchio_output):
                 print 'Healpix error! pinocchio output does not exist: ' + pinocchio_output
                 return
 
-            healpix_output = 'healpix_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + rundir + '.fits'
+            healpix_output = self.healpix_output(i)
 
             if not os.path.exists(healpix_output):
                 healpixify(pinocchio_output,healpix_output,self.survey.nside)
@@ -397,294 +401,99 @@ class Simulation:
                 print 'Healpix error! could not generate: ' + healpix_output
                 return
 
-        os.chdir(cwd)
-
     def add_noise(self):
         
         print 'Adding noise to ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name)
         
-        cwd = os.getcwd()
-
-        if not os.path.exists(self.basedir):
-            print 'Noise error! basedir does not exist: ' + self.basedir
-            return
-
-        os.chdir(self.basedir)
-
-        if not os.path.exists(self.cosmo.name):
-            print 'Noise error! simulation dir does not exist: ' + self.cosmo.name
-            return
-        
-        os.chdir(self.cosmo.name)
-
-        workingdir = os.getcwd()
-        
         for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
-            
-            rundir = 'r' + str(i)
-                
-            if not os.path.exists(rundir):
-                print 'Noise error! rundir does not exist: ' + rundir
-                return
-            
-            os.chdir(rundir)
 
-            
+            healpix_output = self.healpix_output(i)
                 
             if not os.path.exists(healpix_output):
                 print 'Noise error! healpix output does not exist: ' + healpix_output
                 return
 
             for j in range(1,self.nnoise+1):
-                noise_output = 'noise_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + rundir + 'n' + str(j) + '.fits'
+                noise_output = self.noise_output(i,j)
                 
                 if not os.path.exists(noise_output):
                     add_noise(healpix_output,noise_output,self.cosmo,self.survey)
                     
                 if not os.path.exists(noise_output):
                     print 'Noise error! could not generate: ' + noise_output
-                    continue
-        
-        os.chdir(cwd)
+                    return
 
     def measure_data(self):
         
         print 'Measuring data for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
-    
-        cwd = os.getcwd()
-        
-        if not os.path.exists(self.basedir):
-            print 'Measurement error! basedir does not exist: ' + self.basedir
-            return
-
-        os.chdir(self.basedir)
-        
-        if not os.path.exists(self.cosmo.name):
-            print 'Measurement error! simulation dir does not exist: ' + self.cosmo.name
-            return
-
-        os.chdir(self.cosmo.name)
-    
-        workingdir = os.getcwd()
         
         for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
-            
-            rundir = 'r' + str(i)
-            
-            if not os.path.exists(rundir):
-                print 'Measurement error! rundir does not exist: ' + rundir
-                return
-        
-            os.chdir(rundir)
             
             for j in range(1,self.nnoise+1):
                 
                 
+                noise_output = self.noise_output(i,j)
+
                 if not os.path.exists(noise_output):
                     print 'Measurement error! noise output does not exist: ' + noise_output
-                    continue
+                    return
 
-                
+                measure_output = self.measure_output(i,j)
                 
                 if not os.path.exists(measure_output):
                     measure_data(noise_output, measure_output, self.analysis)
                 
                 if not os.path.exists(measure_output):
                     print 'Measurement error! could not generate: ' + measure_output
-    
-        os.chdir(cwd)
+                    return
 
-    def clean_measures(self):
-    
-        print 'Cleaning measurements for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
-        
-        cwd = os.getcwd()
-        
-        if not os.path.exists(self.basedir):
-            print 'Measurement error! basedir does not exist: ' + self.basedir
-            return
-        
-        os.chdir(self.basedir)
-        
-        if not os.path.exists(self.cosmo.name):
-            print 'Measurement error! simulation dir does not exist: ' + self.cosmo.name
-            return
-    
-        os.chdir(self.cosmo.name)
-        
-        workingdir = os.getcwd()
-        
+    def combine_measures(self):
+
+        print 'Combining measures for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
+
+        measure_outputs = []
+
         for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
-            
-            rundir = 'r' + str(i)
-            
-            if not os.path.exists(rundir):
-                print 'Measurement error! rundir does not exist: ' + rundir
-                return
-        
-            os.chdir(rundir)
             
             for j in range(1,self.nnoise+1):
-                measure_output = 'measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
-                
-                if os.path.exists(measure_output):
-                    os.remove(measure_output)
 
-        os.chdir(cwd)
+                measure_output = self.measure_output(i,j)
+
+                if not os.path.exists(measure_output):
+                    print 'Combining error! measure output does not exist: ' + measure_output
+                    return
+                
+                measure_outputs.append(measure_output)
+
+        combined_measure_output = self.combined_measure_output()
+
+
+        if not os.path.exists(combined_measure_output):
+            combine_measures(measure_outputs,combined_measure_output)
+
+        if not os.path.exists(combined_measure_output):
+            print 'Combining error! could not generate: ' + combined_measure_output
 
     def generate_covariances(self):
         
         print 'Generating covariances for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
         
-        cwd = os.getcwd()
-        
-        if not os.path.exists(self.basedir):
-            print 'Covariance error! basedir does not exist: ' + self.basedir
-            return
-        
-        os.chdir(self.basedir)
-        
-        if not os.path.exists(self.cosmo.name):
-            print 'Covariance error! simulation dir does not exist: ' + self.cosmo.name
-            return
-        
-        os.chdir(self.cosmo.name)
-        
-        workingdir = os.getcwd()
-        
-        for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
-            
-            rundir = 'r' + str(i)
-            
-            if not os.path.exists(rundir):
-                print 'Covariance error! rundir does not exist: ' + rundir
-                return
-            
-            os.chdir(rundir)
+        combined_measure_output = self.combined_measure_output()
 
-            for j in range(1,self.nnoise+1):
-
-                measure_output = 'measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
-                
-                if not os.path.exists(measure_output):
-                    print 'Covariance error! measurement output does not exist: ' + measure_output
-                    continue
-                
-                cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
-
-                if not os.path.exists(cov_output):
-                    calc_covariance(measure_output, cov_output)
-                        
-                if not os.path.exists(cov_output):
-                    print 'Covariance error! could not generate: ' + cov_output
-        
-        os.chdir(cwd)
-
-    def clean_covariances(self):
-    
-        print 'Cleaning covariances for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
-        
-        cwd = os.getcwd()
-        
-        if not os.path.exists(self.basedir):
-            print 'Covariance error! basedir does not exist: ' + self.basedir
+        if not os.path.exists(combined_measure_output):
+            print 'Covariance error! combined measurement output does not exist: ' + combined_measure_output
             return
 
-        os.chdir(self.basedir)
-        
-        if not os.path.exists(self.cosmo.name):
-            print 'Covariance error! simulation dir does not exist: ' + self.cosmo.name
-            return
+        cov_output = self.cov_output()
 
-        os.chdir(self.cosmo.name)
-    
-        workingdir = os.getcwd()
-        
-        for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
-            
-            rundir = 'r' + str(i)
-            
-            if not os.path.exists(rundir):
-                print 'Covariance error! rundir does not exist: ' + rundir
-                return
-        
-            os.chdir(rundir)
-            
-            for j in range(1,self.nnoise+1):
-            
-                cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
-                
-                if os.path.exists(cov_output):
-                    os.remove(cov_output)
-        
-        os.chdir(cwd)
+        if not os.path.exists(cov_output):
+            calc_covariance(combined_measure_output, cov_output)
 
-
-    def combine_covariances(self):
-
-        cwd = os.getcwd()
-        
-        if not os.path.exists(self.basedir):
-            print 'Covariance averaging error! basedir does not exist: ' + self.basedir
-            return
-        
-        os.chdir(self.basedir)
-        
-        if not os.path.exists(self.cosmo.name):
-            print 'Covariance averaging error! simulation dir does not exist: ' + self.cosmo.name
-            return
-        
-        os.chdir(self.cosmo.name)
-        
-        workingdir = os.getcwd()
-
-        cov_outputs = []
-    
-        for i in range(1,self.nsim+1):
-            os.chdir(workingdir)
-        
-            rundir = 'r' + str(i)
-        
-            if not os.path.exists(rundir):
-                print 'Covariance averaging error! rundir does not exist: ' + rundir
-                return
-        
-            os.chdir(rundir)
-
-            for j in range(1,self.nnoise+1):
-                cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '_' + rundir + 'n' + str(j) + '.npz'
-                
-                cov_output = os.path.abspath(cov_output)
-
-                if not os.path.exists(cov_output):
-                    print 'Covariance averaging error! covariance does not exist: ' + cov_output
-                    return
-                
-                cov_outputs.append(cov_output)
-
-        os.chdir(workingdir)
-        
-        avg_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-
-        avg_covariances(cov_outputs, avg_cov_output)
-        
-        os.chdir(cwd)
+        if not os.path.exists(cov_output):
+            print 'Covariance error! could not generate: ' + cov_output
 
     def diff_covariances(self, fid):
         
-        cwd = os.getcwd()
-        
-        if not os.path.exists(self.basedir):
-            print 'Covariance differencing error! basedir does not exist: ' + self.basedir
-            return
-        
-        os.chdir(self.basedir)
-
         param = self.t[0]
 
         if param == 'h':
@@ -712,12 +521,8 @@ class Simulation:
             print 'Covariance differencing error! invalid parameter type: ' + param
             return
 
-
-        delta_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-        fid_cov_output = 'cov_' + str(fid.survey.nside) + '_' + fid.cosmo.name + '_' + fid.survey.name + '_' + fid.analysis.name + '.npz'
-
-        delta_cov_output = self.basedir + '/' + self.cosmo.name + '/' + delta_cov_output
-        fid_cov_output = fid.basedir + '/' + fid.cosmo.name + '/' + fid_cov_output
+        delta_cov_output = self.cov_output()
+        fid_cov_output = fid.cov_output()
 
         if not os.path.exists(delta_cov_output):
             print 'Covariance differencing error! delta cov output does not exist: ' + delta_cov_output
@@ -727,24 +532,17 @@ class Simulation:
             print 'Covariance differencing error! fiducial cov output does not exist: ' + fid_cov_output
             return
 
-        dcov_out = 'dcov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-
-        diff_covariances(delta_cov_output, fid_cov_output, dcov_out, delta)
+        dcov_output = self.dcov_output()
+        
+        if not os.path.exists(dcov_output):
+            diff_covariances(delta_cov_output, fid_cov_output, dcov_output, delta)
                 
-        os.chdir(cwd)
+        if not os.path.exists(dcov_output):
+            print 'Covariance differencing error! could not generate: ' + dcov_output
 
     def calc_fisher(self, deltas, ranges):
         
-        cwd = os.getcwd()
-        
-        if not os.path.exists(self.basedir):
-            print 'Fisher error! basedir does not exist: ' + self.basedir
-            return
-        
-        os.chdir(self.basedir)
-
-        fid_cov_output = 'cov_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
-        fid_cov_output = self.basedir + '/' + self.cosmo.name + '/' + fid_cov_output
+        fid_cov_output = self.cov_output()
 
         if not os.path.exists(fid_cov_output):
             print 'Fisher error! fiducial cov output does not exist: ' + fid_cov_output
@@ -754,8 +552,7 @@ class Simulation:
         params = []
 
         for delta in deltas:
-            dcov_out = 'dcov_' + str(delta.survey.nside) + '_' + delta.cosmo.name + '_' + delta.survey.name + '_' + delta.analysis.name + '.npz'
-            dcov_out = delta.basedir + '/' + dcov_out
+            dcov_out = delta.dcov_output()
             
             if not os.path.exists(dcov_out):
                 print 'Fisher error! delta cov output does not exist: ' + dcov_out
@@ -771,14 +568,44 @@ class Simulation:
         for r in ranges:
             code = code + str(r)
 
-        fisher_out = 'F_' + str(delta.survey.nside) + '_' + self.analysis.name + '_' + code + '.npz'
+        fisher_out = self.fisher_output(code)
 
         calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges)
-                
-        os.chdir(cwd)
 
     def plot_analysis(self):
         pass
+
+    def clean_measures(self):
+    
+        print 'Cleaning measurements for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
+        
+        for i in range(1,self.nsim+1):
+            
+            for j in range(1,self.nnoise+1):
+
+                measure_output = self.measure_output(i,j)
+                
+                if os.path.exists(measure_output):
+                    os.remove(measure_output)
+
+    def clean_covariances(self):
+    
+        print 'Cleaning covariances for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
+      
+        cov_output = self.cov_output()
+
+        if os.path.exists(cov_output):
+            os.remove(cov_output)
+
+    def clean_diff_covariances(self):
+
+        print 'Cleaning diff covariances for ' + str(self.cosmo.name) + ' with survey ' + str(self.survey.name) + ' and analysis ' + str(self.analysis.name)
+        
+        dcov_output = self.dcov_output()
+
+        if os.path.exists(dcov_output):
+            os.remove(dcov_output)
+        
 
 def generate_parameter_files(cosmo,name,simparams):
 
@@ -914,122 +741,44 @@ def measure_data(infile,outfile,analysis):
 
     map_data_raw = healpy.fitsfunc.read_map(infile, dtype=numpy.float32)
 
-    mdata = {}
+    m,x,r,i = analysis.process(map_data_raw)
 
-    divs = analysis.divs
-    alist = analysis.alist
+    numpy.savez(outfile,x=x,m=m,r=r,i=i)
 
-    measurements = []
-    
-    x = []
-    
-    ranges = []
-    
-    info = []
-    
-    xlen = 0
+def combine_measures(infiles,outfile):
 
-    for a in alist:
-        map_size = a.map_size
-        
-        a_x = a.x()
-        
-        a_range = (xlen,xlen+len(a_x))
-        
-        ranges.append(a_range)
-        
-        xlen = xlen+len(a_x)
-        
-        info.append(a.info)
-        
-        x.extend(a_x)
+    first = True
 
-        if map_size not in mdata.keys():
-            mdata[map_size] = healpy.pixelfunc.ud_grade(map_data_raw,map_size,power=-2,order_in='NESTED',order_out='NESTED')
+    m = []
 
-
-    for n in range(divs):
+    for f in infiles:
         
-        print 'div ' + str(n)
-        
-        measurement = []
-        
-        acount = 0
-        
-        for a in alist:
-            print 'analysis ' + str(acount)
-            map_size = a.map_size
-            npix = healpy.pixelfunc.nside2npix(map_size)
-            data = mdata[map_size][npix/divs*n:npix/divs*(n+1)]
-            data = data - numpy.mean(data)
+        data = numpy.load(f)
 
-            a_m = a.process_data(data)
+        temp_m = data['m']
 
-            measurement.extend(a_m)
-        
-            acount += 1
+        if first:
+            x = data['x']
+            r = data['r']
+            i = data['i']
 
-        measurements.append(measurement)
+        m.extend(temp_m)
 
-    numpy.savez(outfile,x=x,m=measurements,r=ranges,info=info)
+    numpy.savez(outfile,x=x,m=m,r=r,i=i)
 
 def calc_covariance(infile,outfile):
     
     data = numpy.load(infile)
     
-    x = numpy.array(data['x'],dtype=numpy.float64)
-    m = numpy.array(data['m'],dtype=numpy.float64)
+    x = data['x']
+    m = data['m']
     r = data['r']
-    info = data['info']
+    i = data['i']
     
-    n = len(x)
-    
-    mean = numpy.zeros(n,dtype=numpy.float64)
-    cov = numpy.zeros((n,n),dtype=numpy.float64)
-    
-    count = 0
-    
-    for i in m:
-        mean += i
-        count += 1
-        cov += numpy.outer(i,i)
-
-    if count > 0:
-        mean = mean / float(count)
-        cov = cov / float(count)
+    cov = numpy.cov(m,rowvar=1)
+    mean = numpy.mean(m,axis=0)
         
-    numpy.savez(outfile,x=x,mean=mean,cov=cov,r=r,info=info)
-
-def avg_covariances(infiles, outfile):
-    count = 0.0
-    
-    first = True
-    
-    for f in infiles:
-        
-        data = numpy.load(f)
-        
-        if first:
-            x = data['x']
-            info = data['info']
-            r = data['r']
-            bins = len(x)
-            mean_avg = numpy.zeros(bins,dtype=numpy.float64)
-            cov_avg = numpy.zeros((bins,bins),dtype=numpy.float64)
-            first = False
-
-        cov = data['cov']
-        mean = data['mean']
-
-        mean_avg += mean
-        cov_avg += cov
-        count += 1.0
-
-    mean_avg = mean_avg / count
-    cov_avg = cov_avg / count
-
-    numpy.savez(outfile, x=x, mean=mean_avg, cov=cov_avg, r=r, info=info)
-
+    numpy.savez(outfile,x=x,mean=mean,cov=cov,r=r,i=i)
 
 def diff_covariances(infile, fidfile, outfile, delta):
 
@@ -1042,7 +791,7 @@ def diff_covariances(infile, fidfile, outfile, delta):
     data_cov = data['cov']
     
     data_r = data['r']
-    data_info = data['info']
+    data_i = data['i']
 
     fid_mean = fid['mean']
     fid_cov = fid['cov']
@@ -1050,7 +799,7 @@ def diff_covariances(infile, fidfile, outfile, delta):
     diff_mean = (data_mean - fid_mean) / delta
     diff_cov = (data_cov - fid_cov) / delta
 
-    numpy.savez(outfile, x=data_x, mean=diff_mean, cov=diff_cov, r=data_r, info=data_info)
+    numpy.savez(outfile, x=data_x, mean=diff_mean, cov=diff_cov, r=data_r, i=data_i)
 
 
 def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
@@ -1069,7 +818,7 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
         r2 = r[n][1]
         filter1.extend(range(r1,r2))
 
-    cov = cov - numpy.outer(mean, mean)
+#    cov = cov - numpy.outer(mean, mean)
 
     mean = mean[filter1]
     cov = cov[filter1][:,filter1]
@@ -1097,7 +846,8 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
     #shrink = 1e-16
     #shrink = 1e-28
 
-    shrink = 1e-12
+    shrink = 1e-16
+#    shrink = 0.0
     cov = cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
 
     cov_inv = numpy.linalg.inv(cov)

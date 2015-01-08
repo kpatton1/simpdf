@@ -22,47 +22,51 @@ l = [f] + t
 
 print l
 
-adict={(4096,'pdf'):(200,-10.0e15,10.0e15), (2048,'pdf'):(200,-10.0e15,10.0e15), (1024,'pdf'):(200,-10.0e15,10.0e15), (512,'pdf'):(200,-10.0e15,10.0e15), (256,'pdf'):(200,-10.0e15,10.0e15), (128,'pdf'):(200,-10.0e15,10.0e15), (64,'pdf'):(200,-10.0e15,10.0e15), (256,'ps'):(768)}
+alist=[(256,'ps',768), (4096,'pdf',200,-10.0e15,10.0e15), (2048,'pdf',200,-10.0e15,10.0e15), (1024,'pdf',200,-10.0e15,10.0e15), (512,'pdf',200,-10.0e15,10.0e15), (256,'pdf',200,-10.0e15,10.0e15), (128,'pdf',200,-10.0e15,10.0e15), (64,'pdf',200,-10.0e15,10.0e15)]
 
-for key in adict.keys():
-    print key
+for i in range(len(alist)):
+    print i, '->', alist[i]
 
 aname='fullcov'
 
 basedir='data'
 
-fs = Simulation(basedir,f,adict,aname)
+fs = Simulation(basedir,f,alist,aname)
 
 ts = []
 
 for i in t:
-    ts.append(Simulation(basedir,i,adict,aname))
+    ts.append(Simulation(basedir,i,alist,aname))
 
 ls = ts + [fs]
 
-#for s in ls:
-#    s.run_pinocchio()
+dostuff=False
 
-#for s in ls:
-#    s.convert_healpix()
-#    s.add_noise()
-#    s.measure_data()
-#    s.generate_covariances()
-#    s.combine_covariances()
+if dostuff:
 
+    for s in ls:
+        s.run_pinocchio()
 
-#for s in ts:
-#    s.diff_covariances(fs)
+    for s in ls:
+        s.convert_healpix()
+        s.add_noise()
+        s.measure_data()
+        s.combine_measures()
+
+fs.clean_covariances()
+
+for s in ls:
+    #s.clean_covariances()
+    s.generate_covariances()
+
+for s in ts:
+    #s.clean_diff_covariances()
+    s.diff_covariances(fs)
 
 fs.calc_fisher(ts,[0])
-fs.calc_fisher(ts,[7])
-fs.calc_fisher(ts,[0,7])
+fs.calc_fisher(ts,[3])
+fs.calc_fisher(ts,[0,3])
 
-#fs.calc_fisher(ts,[3])
-#fs.calc_fisher(ts,[0,3])
+#fs.calc_fisher(ts,[1,3,5,7])
 
-#fs.calc_fisher(ts,[7])
-#fs.calc_fisher(ts,[0,7])
-
-fs.calc_fisher(ts,[0,3,7,2])
-#fs.calc_fisher(ts,[3,1,7,4,2,6,5])
+#fs.calc_fisher(ts,[0,1,3,5,7])

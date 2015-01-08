@@ -2,8 +2,8 @@
 import os
 from pysimpdf.core import Simulation
 
-nsim_fid = 20
-nsim_delta = 5
+nsim_fid = 200
+nsim_delta = 50
 nnoise = 1
 
 f = ['f', 0.0, nsim_fid, nnoise]
@@ -21,7 +21,7 @@ l = [f]
 
 print l
 
-adict={(4096,'pdf'):(200,-10.0e15,10.0e15), (2048,'pdf'):(200,-10.0e15,10.0e15), (1024,'pdf'):(200,-10.0e15,10.0e15), (512,'pdf'):(200,-10.0e15,10.0e15), (256,'pdf'):(200,-10.0e15,10.0e15), (128,'pdf'):(200,-10.0e15,10.0e15), (64,'pdf'):(200,-10.0e15,10.0e15), (256,'ps'):(768)}
+alist=[(256,'ps',768), (4096,'pdf',200,-10.0e15,10.0e15), (2048,'pdf',200,-10.0e15,10.0e15), (1024,'pdf',200,-10.0e15,10.0e15), (512,'pdf',200,-10.0e15,10.0e15), (256,'pdf',200,-10.0e15,10.0e15), (128,'pdf',200,-10.0e15,10.0e15), (64,'pdf',200,-10.0e15,10.0e15)]
 
 aname='fullcov'
 
@@ -30,7 +30,7 @@ basedir='data'
 ls = []
 
 for i in l:
-    ls.append(Simulation(basedir,i,adict,aname))
+    ls.append(Simulation(basedir,i,alist,aname))
 
 for s in ls:
     s.run_pinocchio()
@@ -39,5 +39,5 @@ for s in ls:
     s.convert_healpix()
     s.add_noise()
     s.measure_data()
-    s.generate_covariances()
+    s.combine_measures()
 

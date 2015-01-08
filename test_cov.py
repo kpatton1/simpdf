@@ -2,21 +2,20 @@
 import numpy
 import matplotlib.pyplot as plt
 
-ranges = [0,7]
-#ranges = [0,7]
-#ranges=[0,7]
+#ranges = [0,3]
+ranges = [0]
 
 data = numpy.load('data/fiducial/cov_8192_fiducial_fiducial_fullcov.npz')
 
-dom_data = numpy.load('data/dcov_8192_delta_om_0.32_fiducial_fullcov.npz')
-ds8_data = numpy.load('data/dcov_8192_delta_s8_0.9_fiducial_fullcov.npz')
+dom_data = numpy.load('data/delta_om_0.32/dcov_8192_delta_om_0.32_fiducial_fullcov.npz')
+ds8_data = numpy.load('data/delta_s8_0.9/dcov_8192_delta_s8_0.9_fiducial_fullcov.npz')
 
 mean = data['mean']
 cov = data['cov']
 
 r = data['r']
 
-cov = cov - numpy.outer(mean, mean)
+#cov = cov - numpy.outer(mean, mean)
 
 filter1 = []
 
@@ -91,9 +90,12 @@ for i in range(len(cov)):
 
 trace = numpy.trace(cov)
 
-shrink = 0.99
+shrink = 1.0e-11
+#shrink = 0.0
 
-cov = (1.0 - shrink) * cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
+cov = cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
+
+#cov = (1.0 - shrink) * cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
 
 s = numpy.shape(cov)
 
@@ -112,6 +114,9 @@ plt.plot(range(len(e)), e, color='blue')
 plt.plot(range(len(e)), -e, color='red')
 #plt.plot(range(len(e)),numpy.ones(len(e))*1.0e25)
 plt.yscale('log')
+plt.ylabel('magnitude')
+plt.xlabel('eigenvalue')
+plt.title('covariance eigenvalues')
 
 tot = numpy.sum(e)
 
