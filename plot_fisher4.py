@@ -5,20 +5,41 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.patches import Ellipse
 
-#fisher = 'data/F_8192_fullcov_0.npz'
-#basetitle = 'PS (nside 256)'
+fisher1 = 'data/F_8192_fullcov_1357.npz'
+basetitle = 'PDF resolution dependence'
 
-fisher = 'data/F_8192_fullcov_3.npz'
-basetitle = 'PDF (nside 1024)'
+fisher2 = 'data/F_8192_fullcov_1.npz'
+
+fisher3 = 'data/F_8192_fullcov_3.npz'
+
+fisher4 = 'data/F_8192_fullcov_5.npz'
+
+fisher5 = 'data/F_8192_fullcov_7.npz'
+
+
+
+
+#fisher = 'data/F_8192_fullcov_7.npz'
+#basetitle = 'PDF (nside 1024)'
 
 #fisher = 'data/F_8192_fullcov_3.npz'
 #basetitle = 'PDF (nside 4096)'
 
-data = numpy.load(fisher)
-
-F = data['F']
-F_inv = data['F_inv']
+data = numpy.load(fisher1)
+F1 = data['F']
 params = data['params']
+
+data = numpy.load(fisher2)
+F2 = data['F']
+
+data = numpy.load(fisher3)
+F3 = data['F']
+
+data = numpy.load(fisher4)
+F4 = data['F']
+
+data = numpy.load(fisher5)
+F5 = data['F']
 
 n = len(params)
 
@@ -26,23 +47,23 @@ names = params
 
 centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0}
 
-print F
+#print F4
 
-F_noq = F[:-1,:-1]
+F1[-1,-1] += 1/(0.1*0.1)
+F2[-1,-1] += 1/(0.1*0.1)
+F3[-1,-1] += 1/(0.1*0.1)
+F4[-1,-1] += 1/(0.1*0.1)
+F5[-1,-1] += 1/(0.1*0.1)
 
-F_priorq = F.copy()
-F_priorq[-1,-1] += 1/(0.1*0.1)
-
-for p in params:
-    print p
-
-def plot_fisher(F, basetitle, color, rescale=False):
+def plot_fisher(F, basetitle, i,j, color, rescale=False):
     
     F_inv = numpy.linalg.inv(F)
 
     ixgrid = numpy.ix_([j,i],[j,i])
 
     subM = F_inv[ixgrid]
+
+    print subM
 
     subF = numpy.linalg.inv(subM)
     
@@ -78,20 +99,29 @@ for i in range(n):
 
         handles = []
 
-        plot_fisher(F, basetitle, 'blue',True)
+        #plot_fisher(F1, basetitle, i,j,'blue',False)
 
-        plt.plot([],color='blue',label='Marginalize over q')
+        #plt.plot([],color='blue',label='PDF combined')
 
-        plot_fisher(F_priorq, basetitle, 'green',False)
+        plot_fisher(F2, basetitle, i, j, 'green',False)
 
-        plt.plot([],color='green',label='Prior on q')
+        plt.plot([],color='green',label='PDF 4096')
 
-        if i < n-1 and j < n-1:
-
-            plot_fisher(F_noq, basetitle, 'red', False)
+        plot_fisher(F3, basetitle, i, j, 'red', False)
             
-            plt.plot([],color='red',label='Exactly known q')
+        plt.plot([],color='red',label='PDF 1024')
+
+        plot_fisher(F4, basetitle, i, j, 'purple', False)
+
+        plt.plot([],color='purple',label='PDF 256')
+
+        plot_fisher(F5, basetitle, i, j, 'orange', False)
+
+        plt.plot([],color='orange',label='PDF 64')
         
         plt.legend()
+        
+        plt.xlim([0.17,0.42])
+        plt.ylim([0.70,0.92])
 
         plt.show()

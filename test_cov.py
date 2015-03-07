@@ -7,8 +7,8 @@ ranges = [0]
 
 data = numpy.load('data/fiducial/cov_8192_fiducial_fiducial_fullcov.npz')
 
-dom_data = numpy.load('data/delta_om_0.32/dcov_8192_delta_om_0.32_fiducial_fullcov.npz')
-ds8_data = numpy.load('data/delta_s8_0.9/dcov_8192_delta_s8_0.9_fiducial_fullcov.npz')
+dom_data = numpy.load('data/dcov_8192_delta_om_0.32_fiducial_fullcov.npz')
+ds8_data = numpy.load('data/dcov_8192_delta_s8_0.9_fiducial_fullcov.npz')
 
 mean = data['mean']
 cov = data['cov']
@@ -49,7 +49,12 @@ plt.yscale('log')
 for n in ranges:
     r1 = r[n][0]
     r2 = r[n][1]
-    filter1.extend(range(r1,r2))
+
+    if n == 0:
+        r1 = 0
+        r2 = 512
+
+    filter1.extend(range(r1,r2,4))
 
 cov = cov[filter1][:,filter1]
 dmean = dmean[filter1]
@@ -90,7 +95,7 @@ for i in range(len(cov)):
 
 trace = numpy.trace(cov)
 
-shrink = 1.0e-11
+shrink = 0.0
 #shrink = 0.0
 
 cov = cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
@@ -101,9 +106,14 @@ s = numpy.shape(cov)
 
 e,v = numpy.linalg.eigh(cov)
 
-for i in range(len(e)):
-    temp = numpy.dot(dmean,v[i])
-    e[i] = temp * temp / e[i]
+#for i in range(len(e)):
+#    temp = numpy.dot(dmean,v[i])
+#    e[i] = temp * temp / e[i]
+
+#for i in range(len(v)):
+#    print i, e[i]
+#    plt.plot(range(len(v[i])), v[i])
+#    plt.show()
 
 for i in e:
     print i

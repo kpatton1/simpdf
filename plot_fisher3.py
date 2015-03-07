@@ -111,7 +111,7 @@ for i in range(n):
         
         plt.legend()
         
-        plt.xlim([0.21,0.37])
-        plt.ylim([0.75,0.89])
+        plt.xlim([0.17,0.42])
+        plt.ylim([0.70,0.92])
 
         plt.show()

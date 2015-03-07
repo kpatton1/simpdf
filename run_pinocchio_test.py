@@ -2,8 +2,8 @@
 import os
 from pysimpdf.core import Simulation
 
-nsim_fid = 20
-nsim_delta = 5
+nsim_fid = 200
+nsim_delta = 50
 nnoise = 1
 
 f = ['f', 0.0, nsim_fid, nnoise]
@@ -53,7 +53,7 @@ if dostuff:
         s.measure_data()
         s.combine_measures()
 
-fs.clean_covariances()
+#fs.clean_covariances()
 
 for s in ls:
     #s.clean_covariances()
@@ -67,6 +67,11 @@ fs.calc_fisher(ts,[0])
 fs.calc_fisher(ts,[3])
 fs.calc_fisher(ts,[0,3])
 
-#fs.calc_fisher(ts,[1,3,5,7])
+fs.calc_fisher(ts,[1])
+fs.calc_fisher(ts,[3])
+fs.calc_fisher(ts,[5])
+fs.calc_fisher(ts,[7])
 
-#fs.calc_fisher(ts,[0,1,3,5,7])
+fs.calc_fisher(ts,[1,3,5,7])
+
+fs.calc_fisher(ts,[0,1,3,5,7])
