@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.patches import Ellipse
 
-fisher1 = 'data/F_8192_fullcov_1357.npz'
+fisher0 = 'data/F_8192_fullcov_1357.npz'
+
+fisher1 = 'data/F_8192_fullcov_35.npz'
 basetitle = 'PDF resolution dependence'
 
 fisher2 = 'data/F_8192_fullcov_1.npz'
@@ -18,12 +20,14 @@ fisher5 = 'data/F_8192_fullcov_7.npz'
 
 
 
-
 #fisher = 'data/F_8192_fullcov_7.npz'
 #basetitle = 'PDF (nside 1024)'
 
 #fisher = 'data/F_8192_fullcov_3.npz'
 #basetitle = 'PDF (nside 4096)'
+
+data = numpy.load(fisher0)
+F0 = data['F']
 
 data = numpy.load(fisher1)
 F1 = data['F']
@@ -49,6 +53,7 @@ centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0}
 
 #print F4
 
+F0[-1,-1] += 1/(0.1*0.1)
 F1[-1,-1] += 1/(0.1*0.1)
 F2[-1,-1] += 1/(0.1*0.1)
 F3[-1,-1] += 1/(0.1*0.1)
@@ -98,10 +103,13 @@ for i in range(n):
             continue
 
         handles = []
+        
+        plot_fisher(F0, basetitle, i, j, 'black', False)
+        plt.plot([],color='black',label='PDF 4096+1024+256+64')
 
-        #plot_fisher(F1, basetitle, i,j,'blue',False)
+        plot_fisher(F1, basetitle, i,j,'blue',False)
 
-        #plt.plot([],color='blue',label='PDF combined')
+        plt.plot([],color='blue',label='PDF 1024+256')
 
         plot_fisher(F2, basetitle, i, j, 'green',False)
 

@@ -71,9 +71,9 @@ def plot_fisher(F, basetitle, color, rescale=False):
 for i in range(n):
     for j in range(i):
 
-        if names[i] != 's8':
+        if names[i] != 's8' and names[i] != 'q':
             continue
-        if names[j] != 'om':
+        if names[j] != 'om' and names[j] != 's8':
             continue
 
         handles = []

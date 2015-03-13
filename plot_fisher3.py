@@ -12,7 +12,7 @@ fisher2 = 'data/F_8192_fullcov_3.npz'
 
 fisher3 = 'data/F_8192_fullcov_03.npz'
 
-fisher4 = 'data/F_8192_fullcov_1357.npz'
+fisher4 = 'data/F_8192_fullcov_035.npz'
 
 
 
@@ -105,9 +105,9 @@ for i in range(n):
             
         plt.plot([],color='red',label='PS 256 + PDF 1024')
 
-        #plot_fisher(F4, basetitle, i, j, 'purple', False)
+        plot_fisher(F4, basetitle, i, j, 'purple', False)
 
-        #plt.plot([],color='purple',label='PS 256 + PDF 4096,1024,256')
+        plt.plot([],color='purple',label='PS 256 + PDF 1024,256')
         
         plt.legend()
         

@@ -43,12 +43,20 @@ for i in range(len(r)):
         plt.title("Power Spectrum")
         plt.xlabel("l")
         plt.ylabel("C_l")
+        plt.ylim(1e20,1e23)
     else:
-        plt.title("PDF")
+        nside = 8192/(2**i)
+        plt.title("PDF " + str(nside))
         plt.xlabel("Projected Mass (M_solar)")
         plt.ylabel("N")
+        x[filter] = x[filter] - 1.0e16
+        plt.xlim(-1.0e16,1.0e16 )
 
-    plt.errorbar(x[filter], mean[filter], yerr=std[filter], fmt='.')
+    filter2 = (mean[filter] >= 100.0/(200.0*384.0))
+
+    plt.errorbar(x[filter][filter2], mean[filter][filter2], yerr=std[filter][filter2], fmt='.')
+    plt.errorbar(x[filter][~filter2], mean[filter][~filter2], yerr=std[filter][~filter2], fmt='.',color='red')
+
 
     if i == 0:
         plt.xscale('log')

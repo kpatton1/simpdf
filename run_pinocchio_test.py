@@ -55,13 +55,13 @@ if dostuff:
 
 #fs.clean_covariances()
 
-for s in ls:
+#for s in ls:
     #s.clean_covariances()
-    s.generate_covariances()
+    #s.generate_covariances()
 
-for s in ts:
+#for s in ts:
     #s.clean_diff_covariances()
-    s.diff_covariances(fs)
+    #s.diff_covariances(fs)
 
 fs.calc_fisher(ts,[0])
 fs.calc_fisher(ts,[3])
@@ -71,6 +71,12 @@ fs.calc_fisher(ts,[1])
 fs.calc_fisher(ts,[3])
 fs.calc_fisher(ts,[5])
 fs.calc_fisher(ts,[7])
+
+fs.calc_fisher(ts, [3,5])
+fs.calc_fisher(ts, [0,3,5])
+
+fs.calc_fisher(ts, [3,5,7])
+fs.calc_fisher(ts, [0,3,5,7])
 
 fs.calc_fisher(ts,[1,3,5,7])
 
