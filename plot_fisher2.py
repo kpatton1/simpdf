@@ -8,7 +8,7 @@ from matplotlib.patches import Ellipse
 #fisher = 'data/F_8192_fullcov_0.npz'
 #basetitle = 'PS (nside 256)'
 
-fisher = 'data/F_8192_fullcov_3.npz'
+fisher = 'data/F_8192_fullcov_05.npz'
 basetitle = 'PDF (nside 1024)'
 
 #fisher = 'data/F_8192_fullcov_3.npz'
@@ -36,19 +36,31 @@ F_priorq[-1,-1] += 1/(0.1*0.1)
 for p in params:
     print p
 
-def plot_fisher(F, basetitle, color, rescale=False):
+def plot_fisher(F, basetitle, i,j, color, rescale=False):
     
     F_inv = numpy.linalg.inv(F)
-
+    
     ixgrid = numpy.ix_([j,i],[j,i])
-
+    
     subM = F_inv[ixgrid]
-
+    
+    print subM
+    
+    sigma1 = numpy.sqrt(subM[0,0])
+    sigma2 = numpy.sqrt(subM[1,1])
+    
     subF = numpy.linalg.inv(subM)
     
     l, v = numpy.linalg.eig(subM)
     l = numpy.sqrt(l)
-
+    
+    area = l[0]*l[1]*numpy.pi
+    
+    print names[j] + ' sd: ' + str(sigma1)
+    print names[i] + ' sd: ' + str(sigma2)
+    print 'area: ' + str(area)
+    print 'fom: ' + str(1.0/area)
+    
     ax = plt.subplot(111)
     ax.set_title(basetitle + ': ' + names[j] + ' vs ' + names[i])
     
@@ -62,11 +74,12 @@ def plot_fisher(F, basetitle, color, rescale=False):
     ell.set_facecolor('none')
     ell.set_edgecolor(color)
     ax.add_artist(ell)
-
+    
     if rescale:
         plt.xlim([center_j-numpy.sqrt(subM[0,0])*1.2,center_j+numpy.sqrt(subM[0,0])*1.2])
         plt.ylim([center_i-numpy.sqrt(subM[1,1])*1.2,center_i+numpy.sqrt(subM[1,1])*1.2])
         plt.scatter([center_j],[center_i])
+
 
 for i in range(n):
     for j in range(i):
@@ -78,17 +91,17 @@ for i in range(n):
 
         handles = []
 
-        plot_fisher(F, basetitle, 'blue',True)
+        plot_fisher(F, basetitle, i,j,'blue',True)
 
         plt.plot([],color='blue',label='Marginalize over q')
 
-        plot_fisher(F_priorq, basetitle, 'green',False)
+        plot_fisher(F_priorq, basetitle, i,j,'green',False)
 
         plt.plot([],color='green',label='Prior on q')
 
         if i < n-1 and j < n-1:
 
-            plot_fisher(F_noq, basetitle, 'red', False)
+            plot_fisher(F_noq, basetitle, i,j,'red', False)
             
             plt.plot([],color='red',label='Exactly known q')
         

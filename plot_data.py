@@ -52,7 +52,7 @@ for i in range(len(r)):
         x[filter] = x[filter] - 1.0e16
         plt.xlim(-1.0e16,1.0e16 )
 
-    filter2 = (mean[filter] >= 100.0/(200.0*384.0))
+    filter2 = (mean[filter] >= 1000.0/(200.0*384.0))
 
     plt.errorbar(x[filter][filter2], mean[filter][filter2], yerr=std[filter][filter2], fmt='.')
     plt.errorbar(x[filter][~filter2], mean[filter][~filter2], yerr=std[filter][~filter2], fmt='.',color='red')

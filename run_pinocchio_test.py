@@ -72,6 +72,8 @@ fs.calc_fisher(ts,[3])
 fs.calc_fisher(ts,[5])
 fs.calc_fisher(ts,[7])
 
+fs.calc_fisher(ts, [0,5])
+
 fs.calc_fisher(ts, [3,5])
 fs.calc_fisher(ts, [0,3,5])
 

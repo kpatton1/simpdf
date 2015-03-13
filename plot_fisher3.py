@@ -14,7 +14,7 @@ fisher3 = 'data/F_8192_fullcov_03.npz'
 
 fisher4 = 'data/F_8192_fullcov_035.npz'
 
-
+fisher5 = 'data/F_8192_fullcov_05.npz'
 
 
 #fisher = 'data/F_8192_fullcov_7.npz'
@@ -36,6 +36,10 @@ F3 = data['F']
 data = numpy.load(fisher4)
 F4 = data['F']
 
+data = numpy.load(fisher5)
+F5 = data['F']
+
+
 n = len(params)
 
 names = params
@@ -48,6 +52,7 @@ F[-1,-1] += 1/(0.1*0.1)
 F2[-1,-1] += 1/(0.1*0.1)
 F3[-1,-1] += 1/(0.1*0.1)
 F4[-1,-1] += 1/(0.1*0.1)
+F5[-1,-1] += 1/(0.1*0.1)
 
 def plot_fisher(F, basetitle, i,j, color, rescale=False):
     
@@ -58,11 +63,21 @@ def plot_fisher(F, basetitle, i,j, color, rescale=False):
     subM = F_inv[ixgrid]
 
     print subM
+    
+    sigma1 = numpy.sqrt(subM[0,0])
+    sigma2 = numpy.sqrt(subM[1,1])
 
     subF = numpy.linalg.inv(subM)
     
     l, v = numpy.linalg.eig(subM)
     l = numpy.sqrt(l)
+    
+    area = l[0]*l[1]*numpy.pi
+    
+    print names[j] + ' sd: ' + str(sigma1)
+    print names[i] + ' sd: ' + str(sigma2)
+    print 'area: ' + str(area)
+    print 'fom: ' + str(1.0/area)
 
     ax = plt.subplot(111)
     ax.set_title(basetitle + ': ' + names[j] + ' vs ' + names[i])
@@ -104,10 +119,15 @@ for i in range(n):
         plot_fisher(F3, basetitle, i, j, 'red', False)
             
         plt.plot([],color='red',label='PS 256 + PDF 1024')
+        
+        plot_fisher(F5,basetitle,i,j, 'black',False)
+        plt.plot([],color='black',label='PS 256 + PDF 256')
 
         plot_fisher(F4, basetitle, i, j, 'purple', False)
 
         plt.plot([],color='purple',label='PS 256 + PDF 1024,256')
+        
+
         
         plt.legend()
         
