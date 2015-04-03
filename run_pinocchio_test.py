@@ -13,7 +13,8 @@ t = [['h', 0.76, nsim_delta, nnoise],
      ['om', 0.32, nsim_delta, nnoise],
      ['s8', 0.90, nsim_delta, nnoise],
      ['w', -0.90, nsim_delta, nnoise],
-     ['q', 1.1, nsim_delta, nnoise]]
+     ['q', 1.1, nsim_delta, nnoise],
+     ['g', 1.1, nsim_delta, nnoise]]
 
 
 l = [f] + t
@@ -55,13 +56,13 @@ if dostuff:
 
 #fs.clean_covariances()
 
-#for s in ls:
+for s in ls:
     #s.clean_covariances()
-    #s.generate_covariances()
+    s.generate_covariances()
 
-#for s in ts:
+for s in ts:
     #s.clean_diff_covariances()
-    #s.diff_covariances(fs)
+    s.diff_covariances(fs)
 
 fs.calc_fisher(ts,[0])
 fs.calc_fisher(ts,[3])
