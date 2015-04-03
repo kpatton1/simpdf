@@ -7,6 +7,7 @@ PINOCCHIO_CORE_SURVEY_DEFAULT_NG=10
 PINOCCHIO_CORE_SURVEY_DEFAULT_ZL=0.4
 PINOCCHIO_CORE_SURVEY_DEFAULT_ZS=0.8
 PINOCCHIO_CORE_SURVEY_DEFAULT_Q=1.0
+PINOCCHIO_CORE_SURVEY_DEFAULT_G=1.0
 
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_NAME='test'
 PINOCCHIO_CORE_ANALYSIS_DEFAULT_ALIST=[]
@@ -33,7 +34,7 @@ class SimParams:
 
 class Survey:
 
-    def __init__(self, name=PINOCCHIO_CORE_SURVEY_DEFAULT_NAME, nside=PINOCCHIO_CORE_SURVEY_DEFAULT_NSIDE, seed=PINOCCHIO_CORE_SURVEY_DEFAULT_SEED, e=PINOCCHIO_CORE_SURVEY_DEFAULT_E, ng=PINOCCHIO_CORE_SURVEY_DEFAULT_NG, zl=PINOCCHIO_CORE_SURVEY_DEFAULT_ZL, zs=PINOCCHIO_CORE_SURVEY_DEFAULT_ZS, q=PINOCCHIO_CORE_SURVEY_DEFAULT_Q):
+    def __init__(self, name=PINOCCHIO_CORE_SURVEY_DEFAULT_NAME, nside=PINOCCHIO_CORE_SURVEY_DEFAULT_NSIDE, seed=PINOCCHIO_CORE_SURVEY_DEFAULT_SEED, e=PINOCCHIO_CORE_SURVEY_DEFAULT_E, ng=PINOCCHIO_CORE_SURVEY_DEFAULT_NG, zl=PINOCCHIO_CORE_SURVEY_DEFAULT_ZL, zs=PINOCCHIO_CORE_SURVEY_DEFAULT_ZS, q=PINOCCHIO_CORE_SURVEY_DEFAULT_Q, g=PINOCCHIO_CORE_ANALYSIS_DEFAULT_G):
         
         self.name = name
         self.nside = nside
@@ -45,6 +46,7 @@ class Survey:
         self.zs = zs
 
         self.q = q
+        self.g = g
 
 class Analysis:
     
@@ -231,7 +233,10 @@ class Simulation:
         return measure_output
 
     def combined_measure_output(self):
-        combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        if self.param == 'g':
+            combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + 'fiducial' + '_' + self.analysis.name + '.npz'
+        else:
+            combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
         return combined_measure_output
 
     def cov_output(self):
@@ -302,13 +307,15 @@ class Simulation:
         val = t[1]
         self.nsim = t[2]
         self.nnoise = t[3]
+        
+        self.param = param
 
         if param == 'h' or param == 'w' or param == 'om' or param == 'ok' or param == 's8':
             cname = 'delta_' + param + '_' + str(val)
         else:
             cname = 'fiducial'
 
-        if param == 'e' or param == 'q':
+        if param == 'e' or param == 'q' or param == 'g':
             sname = 'delta_' + param + '_' + str(val)
         else:
             sname = 'fiducial'
@@ -340,6 +347,9 @@ class Simulation:
 
         elif param == 'q':
             self.survey.q = val
+        
+        elif param == 'g':
+            self.survey.g = val
 
         else:
             if param != 'f':
@@ -487,7 +497,7 @@ class Simulation:
         cov_output = self.cov_output()
 
         if not os.path.exists(cov_output):
-            calc_covariance(combined_measure_output, cov_output)
+            calc_covariance(combined_measure_output, cov_output, self.survey)
 
         if not os.path.exists(cov_output):
             print 'Covariance error! could not generate: ' + cov_output
@@ -516,6 +526,9 @@ class Simulation:
 
         elif param == 'q':
             delta = self.survey.q - fid.survey.q
+        
+        elif param == 'g':
+            delta = self.survey.g - fid.survey.g
 
         else:
             print 'Covariance differencing error! invalid parameter type: ' + param
@@ -766,12 +779,12 @@ def combine_measures(infiles,outfile):
 
     numpy.savez(outfile,x=x,m=m,r=r,i=i)
 
-def calc_covariance(infile,outfile):
+def calc_covariance(infile,outfile,survey):
     
     data = numpy.load(infile)
     
     x = data['x']
-    m = data['m']
+    m = data['m'] * survey.g
     r = data['r']
     i = data['i']
     
