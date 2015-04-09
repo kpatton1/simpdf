@@ -8,14 +8,15 @@ nnoise = 1
 
 f = ['f', 0.0, nsim_fid, nnoise]
 
-t = [['h', 0.76, nsim_delta, nnoise],
-     ['ok', 0.10, nsim_delta, nnoise],
-     ['om', 0.32, nsim_delta, nnoise],
-     ['s8', 0.90, nsim_delta, nnoise],
-     ['w', -0.90, nsim_delta, nnoise],
-     ['q', 1.1, nsim_delta, nnoise],
-     ['g', 1.1, nsim_delta, nnoise]]
+t_h = ['h', 0.76, nsim_delta, nnoise]
+t_ok = ['ok', 0.10, nsim_delta, nnoise]
+t_om = ['om', 0.32, nsim_delta, nnoise]
+t_s8 = ['s8', 0.90, nsim_delta, nnoise]
+t_w = ['w', -0.90, nsim_delta, nnoise]
+t_q = ['q', 1.1, nsim_delta, nnoise]
+t_g = ['g', 1.1, nsim_delta, nnoise]
 
+t = [t_h, t_ok, t_om, t_s8, t_w, t_q, t_g]
 
 l = [f] + t
 

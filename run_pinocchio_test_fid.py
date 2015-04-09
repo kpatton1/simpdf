@@ -14,8 +14,9 @@ t_om = ['om', 0.32, nsim_delta, nnoise]
 t_s8 = ['s8', 0.90, nsim_delta, nnoise]
 t_w = ['w', -0.90, nsim_delta, nnoise]
 t_q = ['q', 1.1, nsim_delta, nnoise]
+t_g = ['g', 1.1, nsim_delta, nnoise]
 
-t = [t_h, t_ok, t_om, t_s8, t_w, t_q]
+t = [t_h, t_ok, t_om, t_s8, t_w, t_q, t_g]
 
 #l = [f] + t
 

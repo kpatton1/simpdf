@@ -233,10 +233,7 @@ class Simulation:
         return measure_output
 
     def combined_measure_output(self):
-        if self.param == 'g':
-            combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + 'fiducial' + '_' + self.analysis.name + '.npz'
-        else:
-            combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
+        combined_measure_output = self.basedir + '/' + self.cosmo.name + '/measure_' + str(self.survey.nside) + '_' + self.cosmo.name + '_' + self.survey.name + '_' + self.analysis.name + '.npz'
         return combined_measure_output
 
     def cov_output(self):
@@ -746,7 +743,7 @@ def add_noise(infile,outfile,cosmo,survey):
     
     sigma = survey.q * survey.e * e_crit * pixelarea / numpy.sqrt(8.0 * numpy.pi * numpy.pi * n_gal * pixelarea)
         
-    map_data = map_data + sigma * numpy.random.randn(12*nside*nside)
+    map_data = survey.g * (map_data + sigma * numpy.random.randn(12*nside*nside))
     
     healpy.fitsfunc.write_map(outfile, map_data)
 
@@ -784,7 +781,7 @@ def calc_covariance(infile,outfile,survey):
     data = numpy.load(infile)
     
     x = data['x']
-    m = data['m'] * survey.g
+    m = data['m']
     r = data['r']
     i = data['i']
     
