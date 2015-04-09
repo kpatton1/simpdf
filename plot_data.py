@@ -11,21 +11,26 @@ mean = data['mean']
 cov = data['cov']
 
 r = data['r']
-"""
+
 corrcoef = numpy.zeros((len(mean),len(mean)), dtype=numpy.float64)
 
 for i in range(len(mean)):
     for j in range(len(mean)):
-        if cov[i][j] != 0.0:
+        if cov[i][j] != 0.0 and mean[i] >= 0.0/(200.0*384) and mean[j] >= 0.0/(200.0*384):
             corrcoef[i][j] = cov[i][j] / numpy.sqrt(cov[i][i] * cov[j][j])
         else:
             corrcoef[i][j] = 0.0
 
 
+#filter = (mean >= 10.0/(200.0*384))
+corrcoef = corrcoef[1168:1368,1168:1368]
 
 plt.pcolor(corrcoef)
 plt.colorbar()
-"""
+plt.show()
+
+exit(0)
+
 std = numpy.zeros(len(mean), dtype=numpy.float64)
 
 for i in range(len(std)):
