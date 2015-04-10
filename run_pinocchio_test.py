@@ -57,9 +57,9 @@ if dostuff:
 
 #fs.clean_covariances()
 
-for s in ls:
+#for s in ls:
     #s.clean_covariances()
-    s.generate_covariances()
+    #s.generate_covariances()
 
 for s in ts:
     #s.clean_diff_covariances()

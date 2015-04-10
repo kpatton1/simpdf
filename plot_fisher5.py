@@ -8,7 +8,7 @@ from matplotlib.patches import Ellipse
 #fisher = 'data/F_8192_fullcov_0.npz'
 #basetitle = 'PS (nside 256)'
 
-fisher = 'data/F_8192_fullcov_5.npz'
+fisher = 'data/F_8192_fullcov_0.npz'
 basetitle = 'PDF (nside 1024)'
 
 #fisher = 'data/F_8192_fullcov_3.npz'
@@ -24,17 +24,16 @@ n = len(params)
 
 names = params
 
-centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0}
+centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0, 'g':1.0}
 
 print F
 
+F[-2,-2] += 1/(0.1*0.1)
+
 F_nog = F[:-1,:-1]
 
-F_noq = F[:-2,:-2]
-
-F_priorq = F.copy()
-F_priorq = F_priorq[:-1,:-1]
-F_priorq[-1,-1] += 1/(0.1*0.1)
+F_priorg = F.copy()
+F_priorg[-1,-1] += 1/(0.05*0.05)
 
 for p in params:
     print p
@@ -87,26 +86,26 @@ def plot_fisher(F, basetitle, i,j, color, rescale=False):
 for i in range(n):
     for j in range(i):
 
-        if names[i] != 's8' and names[i] != 'q':
+        if names[i] != 's8' and names[i] != 'g':
             continue
         if names[j] != 'om' and names[j] != 's8':
             continue
 
         handles = []
 
-        plot_fisher(F_nog, basetitle, i,j,'blue',True)
+        plot_fisher(F, basetitle, i,j,'blue',True)
 
-        plt.plot([],color='blue',label='Marginalize over q')
+        plt.plot([],color='blue',label='Marginalize over g')
 
-        plot_fisher(F_priorq, basetitle, i,j,'green',False)
+        plot_fisher(F_priorg, basetitle, i,j,'green',False)
 
-        plt.plot([],color='green',label='Prior on q')
+        plt.plot([],color='green',label='Prior on g')
 
         if i < n-2 and j < n-2:
 
-            plot_fisher(F_noq, basetitle, i,j,'red', False)
+            plot_fisher(F_nog, basetitle, i,j,'red', False)
             
-            plt.plot([],color='red',label='Exactly known q')
+            plt.plot([],color='red',label='Exactly known g')
         
         plt.legend()
 
