@@ -837,7 +837,7 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
     filter2 = []
 
     for i in range(len(mean)):
-        if cov[i][i] != 0.0 and mean[i] >= 1000.0/(200.0*384.0):
+        if cov[i][i] != 0.0 and mean[i] >= 10.0/(200.0*384.0):
             filter2.append(i)
 
     cov = cov[filter2][:,filter2]
