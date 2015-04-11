@@ -23,7 +23,7 @@ for i in range(len(mean)):
 
 
 #filter = (mean >= 10.0/(200.0*384))
-corrcoef = corrcoef[1168:1368,1168:1368]
+corrcoef = corrcoef[1168:1368,1568:1768]
 
 plt.pcolor(corrcoef)
 plt.colorbar()

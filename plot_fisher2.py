@@ -8,11 +8,11 @@ from matplotlib.patches import Ellipse
 #fisher = 'data/F_8192_fullcov_0.npz'
 #basetitle = 'PS (nside 256)'
 
-fisher = 'data/F_8192_fullcov_5.npz'
-basetitle = 'PDF (nside 1024)'
-
 #fisher = 'data/F_8192_fullcov_3.npz'
-#basetitle = 'PDF (nside 4096)'
+#basetitle = 'PDF (nside 1024)'
+
+fisher = 'data/F_8192_fullcov_35.npz'
+basetitle = 'PDF (nside 256+1024)'
 
 data = numpy.load(fisher)
 
@@ -32,8 +32,7 @@ F_nog = F[:-1,:-1]
 
 F_noq = F[:-2,:-2]
 
-F_priorq = F.copy()
-F_priorq = F_priorq[:-1,:-1]
+F_priorq = F_nog.copy()
 F_priorq[-1,-1] += 1/(0.1*0.1)
 
 for p in params:
@@ -109,5 +108,8 @@ for i in range(n):
             plt.plot([],color='red',label='Exactly known q')
         
         plt.legend()
+
+        plt.xlim([0.17,0.42])
+        plt.ylim([0.70,0.92])
 
         plt.show()
