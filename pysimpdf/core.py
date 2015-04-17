@@ -739,9 +739,9 @@ def add_noise(infile,outfile,cosmo,survey):
 
     nside = healpy.pixelfunc.get_nside(map_data)
 
-    pixelarea = healpy.pixelfunc.nside2pixarea(nside)  * 180.0 / numpy.pi * 180.0 / numpy.pi * 60.0 * 60.0
+    pixelarea = healpy.pixelfunc.nside2pixarea(nside) * 180.0 / numpy.pi * 180.0 / numpy.pi * 60.0 * 60.0
     
-    sigma = survey.q * survey.e * e_crit * pixelarea / numpy.sqrt(8.0 * numpy.pi * numpy.pi * n_gal * pixelarea)
+    sigma = survey.q * survey.e * e_crit / 2.0 * pixelarea / numpy.sqrt(2.0 * n_gal * pixelarea)
         
     map_data = survey.g * (map_data + sigma * numpy.random.randn(12*nside*nside))
     
