@@ -113,7 +113,7 @@ for i in range(n):
 
         handles = []
 
-        plot_fisher(F, basetitle, i,j,'blue',False)
+        plot_fisher(F, basetitle, i,j,'blue',True)
 
         plt.plot([],color='blue',label='PS 256')
 
@@ -136,7 +136,7 @@ for i in range(n):
         
         plt.legend()
         
-        plt.xlim([0.17,0.42])
-        plt.ylim([0.70,0.92])
+        plt.xlim([0.15,0.43])
+        plt.ylim([0.61,1.03])
 
         plt.show()

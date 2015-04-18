@@ -2,8 +2,8 @@
 import numpy
 import matplotlib.pyplot as plt
 
-#ranges = [0,3]
-ranges = [0]
+ranges = [5]
+#ranges = [0]
 
 data = numpy.load('data/fiducial/cov_8192_fiducial_fiducial_fullcov.npz')
 
@@ -121,26 +121,26 @@ for i in range(len(cov)):
 #    dq_mean[i] = dq_mean[i] / dq_tot
 #    dg_mean[i] = dg_mean[i] / dg_tot
 
-plt.figure()
-#plt.errorbar(range(len(mean)), numpy.zeros(len(mean)), yerr=sd, color='black',label='mean sd')
-plt.plot(x, dom_mean, color='blue',label='delta om')
-plt.plot(x, ds8_mean, color='green',label='delta s8')
-plt.plot(x, dq_mean, color='red',label='delta q')
-plt.plot(x, dg_mean, color='orange',label='delta g')
+#plt.figure()
+#plt.errorbar(x, numpy.zeros(len(mean)), yerr=sd, color='black',label='mean sd')
+#plt.plot(x, dom_mean, color='blue',label='delta om')
+#plt.plot(x, ds8_mean, color='green',label='delta s8')
+#plt.plot(x, dq_mean, color='red',label='delta q')
+#plt.plot(x, dg_mean, color='orange',label='delta g')
 
-plt.legend(loc=2)
+#plt.legend(loc=0)
 
-plt.ylabel('dData/dParam / PS bin sd')
-plt.xlabel('PS bin')
+#plt.ylabel('dData/dParam / PDF bin sd')
+#plt.xlabel('PDF bin')
 
 #plt.xscale('log')
 
-plt.figure()
-plt.errorbar(x, mean, yerr=sd)
+#plt.figure()
+#plt.errorbar(x, mean, yerr=sd)
 #plt.xscale('log')
 #plt.yscale('log')
 
-plt.show()
+#plt.show()
 
 for i in range(len(cov)):
     for j in range(len(cov)):
@@ -157,19 +157,9 @@ cov = cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
 
 s = numpy.shape(cov)
 
+cov_inv = numpy.linalg.inv(cov)
+
 e,v = numpy.linalg.eigh(cov)
-
-#for i in range(len(e)):
-#    temp = numpy.dot(dmean,v[i])
-#    e[i] = temp * temp / e[i]
-
-#for i in range(len(v)):
-#    print i, e[i]
-#    plt.plot(range(len(v[i])), v[i])
-#    plt.show()
-
-for i in e:
-    print i
 
 plt.figure()
 
@@ -181,8 +171,18 @@ plt.ylabel('magnitude')
 plt.xlabel('eigenvalue')
 plt.title('covariance eigenvalues')
 
-tot = numpy.sum(e)
+for i in range(len(e)):
+    temp = numpy.dot(ds8_mean,v[i])
+    e[i] = temp * temp / e[i]
 
-print 'sd sigma_m: ' + str(numpy.sqrt(1.0/tot))
+tot = numpy.sum(e[10:])
 
+print 'sd eigen: ' + str(numpy.sqrt(1.0/tot))
+print 'sd inv: ' + str(numpy.sqrt(1.0/numpy.dot(ds8_mean, numpy.dot(cov_inv, ds8_mean))))
+
+plt.show()
+
+for i in range(0,10): #range(len(v)):
+    print i, e[i]
+    plt.plot(range(len(v[i])), v[i]*ds8_mean)
 plt.show()

@@ -134,13 +134,13 @@ for i in range(n):
 
         plt.plot([],color='purple',label='PDF 256')
 
-        plot_fisher(F5, basetitle, i, j, 'orange', False)
+        plot_fisher(F5, basetitle, i, j, 'orange', True)
 
         plt.plot([],color='orange',label='PDF 64')
         
         plt.legend()
         
-        plt.xlim([0.17,0.42])
-        plt.ylim([0.70,0.92])
+        plt.xlim([0.15,0.43])
+        plt.ylim([0.61,1.03])
 
         plt.show()
