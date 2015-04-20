@@ -1,0 +1,7 @@
+*.pyc
+*.ps
+*.eps
+*.png
+data
+*~
+*.npz
