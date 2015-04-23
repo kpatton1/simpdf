@@ -230,7 +230,6 @@ class AnalysisMoments:
     def __init__(self, map_size, divs, scale, mmin=2, mmax=10):
         self.map_size = map_size
         self.divs = divs
-        self.bins = bins
         self.scale = scale
         self.mmin = mmin
         self.mmax = mmax
