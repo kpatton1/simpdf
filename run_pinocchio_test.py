@@ -29,7 +29,7 @@ alist=[(256,'ps',768), (4096,'pdf',200,-10.0e15,10.0e15), (2048,'pdf',200,-10.0e
 for i in range(len(alist)):
     print i, '->', alist[i]
 
-aname='fullcov'
+aname='fullcovmoments'
 
 basedir='data'
 
@@ -57,9 +57,9 @@ if dostuff:
 
 #fs.clean_covariances()
 
-#for s in ls:
+for s in ls:
     #s.clean_covariances()
-    #s.generate_covariances()
+    s.generate_covariances()
 
 for s in ts:
     #s.clean_diff_covariances()
