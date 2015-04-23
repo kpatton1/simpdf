@@ -85,6 +85,18 @@ class Analysis:
                 a_ps.info = a
 
                 self.alist.append(a_ps)
+            
+            elif t == 'moments':
+                map_size = n
+                
+                scale = a[2]
+                mmin = a[3]
+                mmax = a[4]
+            
+                a_moments = AnalysisMoments(n, self.divs, scale, mmin, mmax)
+                a_moments.info = a
+            
+                self.alist.append(a_moments)
 
             else:
                 print 'Error! Unknown analysis type: ' + str(t)
@@ -212,6 +224,39 @@ class AnalysisPDF:
         hist,bin_edges = numpy.histogram(data, bins=self.bins, range=(self.bin_min,self.bin_max))
 
         return hist
+
+class AnalysisMoments:
+
+    def __init__(self, map_size, divs, scale, mmin=2, mmax=10):
+        self.map_size = map_size
+        self.divs = divs
+        self.bins = bins
+        self.scale = scale
+        self.mmin = mmin
+        self.mmax = mmax
+
+    def x(self):
+        x = numpy.arange(self.mmin, self.mmax)
+
+        return x
+
+    def process_chunk(self, data):
+
+        moment_data = data / self.scale
+        
+        moments = numpy.zeros(self.mmax - self.mmin, dtype=numpy.float32)
+
+        if self.mmin == 2:
+            temp = moment_data
+        else:
+            temp = numpy.pow(moment_data, self.mmin-1)
+
+        for i in range(0, self.mmax-self.mmin):
+            temp = temp * moment_data
+            moments[i] = numpy.mean(temp)
+
+        return moments
+
 
 class Simulation:
 

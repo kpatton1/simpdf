@@ -24,7 +24,7 @@ l = [f] + t
 
 print l
 
-alist=[(256,'ps',768), (4096,'pdf',200,-10.0e15,10.0e15), (2048,'pdf',200,-10.0e15,10.0e15), (1024,'pdf',200,-10.0e15,10.0e15), (512,'pdf',200,-10.0e15,10.0e15), (256,'pdf',200,-10.0e15,10.0e15), (128,'pdf',200,-10.0e15,10.0e15), (64,'pdf',200,-10.0e15,10.0e15)]
+alist=[(256,'ps',768), (4096,'pdf',200,-10.0e15,10.0e15), (2048,'pdf',200,-10.0e15,10.0e15), (1024,'pdf',200,-10.0e15,10.0e15), (512,'pdf',200,-10.0e15,10.0e15), (256,'pdf',200,-10.0e15,10.0e15), (128,'pdf',200,-10.0e15,10.0e15), (64,'pdf',200,-10.0e15,10.0e15), (4096, 'moments', 1.0e14, 2, 10), (2048, 'moments', 1.0e14, 2, 10), (1024, 'moments', 1.0e14, 2, 10), (512, 'moments', 1.0e14, 2, 10), (256, 'moments', 1.0e14, 2, 10), (128, 'moments', 1.0e14, 2, 10), (64, 'moments', 1.0e14, 2, 10)]
 
 for i in range(len(alist)):
     print i, '->', alist[i]
@@ -57,9 +57,9 @@ if dostuff:
 
 #fs.clean_covariances()
 
-for s in ls:
+#for s in ls:
     #s.clean_covariances()
-    s.generate_covariances()
+    #s.generate_covariances()
 
 for s in ts:
     #s.clean_diff_covariances()

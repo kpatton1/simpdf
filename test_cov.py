@@ -121,26 +121,26 @@ for i in range(len(cov)):
 #    dq_mean[i] = dq_mean[i] / dq_tot
 #    dg_mean[i] = dg_mean[i] / dg_tot
 
-#plt.figure()
+plt.figure()
 #plt.errorbar(x, numpy.zeros(len(mean)), yerr=sd, color='black',label='mean sd')
-#plt.plot(x, dom_mean, color='blue',label='delta om')
-#plt.plot(x, ds8_mean, color='green',label='delta s8')
-#plt.plot(x, dq_mean, color='red',label='delta q')
-#plt.plot(x, dg_mean, color='orange',label='delta g')
+plt.plot(x, dom_mean, color='blue',label='delta om')
+plt.plot(x, ds8_mean, color='green',label='delta s8')
+plt.plot(x, dq_mean, color='red',label='delta q')
+plt.plot(x, dg_mean, color='orange',label='delta g')
 
-#plt.legend(loc=0)
+plt.legend(loc=0)
 
-#plt.ylabel('dData/dParam / PDF bin sd')
-#plt.xlabel('PDF bin')
+plt.ylabel('dData/dParam / PDF bin sd')
+plt.xlabel('PDF bin')
 
 #plt.xscale('log')
 
-#plt.figure()
-#plt.errorbar(x, mean, yerr=sd)
+plt.figure()
+plt.errorbar(x, mean, yerr=sd)
 #plt.xscale('log')
-#plt.yscale('log')
+plt.yscale('log')
 
-#plt.show()
+plt.show()
 
 for i in range(len(cov)):
     for j in range(len(cov)):
@@ -172,17 +172,17 @@ plt.xlabel('eigenvalue')
 plt.title('covariance eigenvalues')
 
 for i in range(len(e)):
-    temp = numpy.dot(ds8_mean,v[i])
+    temp = numpy.dot(dq_mean,v[i])
     e[i] = temp * temp / e[i]
 
-tot = numpy.sum(e[10:])
+tot = numpy.sum(e)
 
 print 'sd eigen: ' + str(numpy.sqrt(1.0/tot))
-print 'sd inv: ' + str(numpy.sqrt(1.0/numpy.dot(ds8_mean, numpy.dot(cov_inv, ds8_mean))))
+print 'sd inv: ' + str(numpy.sqrt(1.0/numpy.dot(dq_mean, numpy.dot(cov_inv, dq_mean))))
 
 plt.show()
 
 for i in range(0,10): #range(len(v)):
     print i, e[i]
-    plt.plot(range(len(v[i])), v[i]*ds8_mean)
+    plt.plot(range(len(v[i])), v[i]*dq_mean)
 plt.show()

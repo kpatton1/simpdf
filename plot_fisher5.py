@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.patches import Ellipse
 
-fisher = 'data/F_8192_fullcov_0.npz'
-basetitle = 'PS (nside 256)'
+#fisher = 'data/F_8192_fullcov_0.npz'
+#basetitle = 'PS (nside 256)'
 
-#fisher = 'data/F_8192_fullcov_3.npz'
-#basetitle = 'PDF (nside 1024)'
+fisher = 'data/F_8192_fullcov_3.npz'
+basetitle = 'PDF (nside 1024)'
 
 #fisher = 'data/F_8192_fullcov_5.npz'
 #basetitle = 'PDF (nside 256)'
@@ -93,7 +93,7 @@ for i in range(n):
 
         handles = []
 
-        plot_fisher(F, basetitle, i,j,'blue',False)
+        plot_fisher(F, basetitle, i,j,'blue',True)
 
         plt.plot([],color='blue',label='Marginalize over g')
 
@@ -109,7 +109,7 @@ for i in range(n):
         
         plt.legend()
 
-        plt.xlim([0.17,0.42])
-        plt.ylim([0.70,0.92])
+        #plt.xlim([0.17,0.42])
+        #plt.ylim([0.70,0.92])
 
         plt.show()
