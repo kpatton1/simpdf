@@ -10,11 +10,15 @@ basetitle = 'PS vs PDF'
 
 fisher2 = 'data/F_8192_fullcov_3.npz'
 
-fisher3 = 'data/F_8192_fullcov_03.npz'
+fisher3 = 'data/F_8192_fullcov_5.npz'
 
 fisher4 = 'data/F_8192_fullcov_035.npz'
 
 fisher5 = 'data/F_8192_fullcov_05.npz'
+
+fisher6 = 'data/F_8192_fullcovmoments_12.npz'
+
+fisher7 = 'data/F_8192_fullcovmoments_10.npz'
 
 
 #fisher = 'data/F_8192_fullcov_7.npz'
@@ -39,10 +43,17 @@ F4 = data['F']
 data = numpy.load(fisher5)
 F5 = data['F']
 
+data = numpy.load(fisher6)
+F6 = data['F']
+
+data = numpy.load(fisher7)
+F7 = data['F']
 
 n = len(params)
 
 names = params
+
+print names
 
 centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0}
 
@@ -53,11 +64,33 @@ F2[-2,-2] += 1/(0.1*0.1)
 F3[-2,-2] += 1/(0.1*0.1)
 F4[-2,-2] += 1/(0.1*0.1)
 F5[-2,-2] += 1/(0.1*0.1)
-F[-1,-1] += 1/(0.02*0.02)
-F2[-1,-1] += 1/(0.02*0.02)
-F3[-1,-1] += 1/(0.02*0.02)
-F4[-1,-1] += 1/(0.02*0.02)
-F5[-1,-1] += 1/(0.02*0.02)
+F6[-2,-2] += 1/(0.1*0.1)
+F7[-2,-2] += 1/(0.1*0.1)
+F[-1,-1] += 1/(0.05*0.05)
+F2[-1,-1] += 1/(0.05*0.05)
+F3[-1,-1] += 1/(0.05*0.05)
+F4[-1,-1] += 1/(0.05*0.05)
+F5[-1,-1] += 1/(0.05*0.05)
+F6[-1,-1] += 1/(0.05*0.05)
+F7[-1,-1] += 1/(0.05*0.05)
+#F[4,4] += 1/(0.0001*0.0001)
+#F2[4,4] += 1/(0.0001*0.0001)
+#F3[4,4] += 1/(0.0001*0.0001)
+#F4[4,4] += 1/(0.0001*0.0001)
+#F5[4,4] += 1/(0.0001*0.0001)
+#F[1,1] += 1/(0.000001*0.000001)
+#F2[1,1] += 1/(0.000001*0.000001)
+#F3[1,1] += 1/(0.000001*0.000001)
+#F4[1,1] += 1/(0.000001*0.000001)
+#F5[1,1] += 1/(0.000001*0.000001)
+#F[0,0] += 1/(0.1*0.1)
+#F2[0,0] += 1/(0.1*0.1)
+#F3[0,0] += 1/(0.1*0.1)
+#F4[0,0] += 1/(0.1*0.1)
+#F5[0,0] += 1/(0.1*0.1)
+
+
+
 
 def plot_fisher(F, basetitle, i,j, color, rescale=False):
     
@@ -121,22 +154,29 @@ for i in range(n):
 
         plt.plot([],color='green',label='PDF 1024')
 
-        plot_fisher(F3, basetitle, i, j, 'red', False)
+#        plot_fisher(F3, basetitle, i, j, 'red', False)
             
-        plt.plot([],color='red',label='PS 256 + PDF 1024')
+#        plt.plot([],color='red',label='PS 256 + PDF 1024')
         
-        plot_fisher(F5,basetitle,i,j, 'black',False)
-        plt.plot([],color='black',label='PS 256 + PDF 256')
+        plot_fisher(F3,basetitle,i,j, 'black',False)
+        plt.plot([],color='black',label='PDF 256')
 
-        plot_fisher(F4, basetitle, i, j, 'purple', False)
+#        plot_fisher(F4, basetitle, i, j, 'purple', False)
 
-        plt.plot([],color='purple',label='PS 256 + PDF 1024,256')
+#        plt.plot([],color='purple',label='PS 256 + PDF 1024,256')
+
+        plot_fisher(F7,basetitle,i,j, 'red', False)
+        plt.plot([],color='red', label='Moment 1024')
         
-
+        plot_fisher(F6,basetitle,i,j, 'purple',False)
+        plt.plot([],color='purple',label='Moment 256')
         
         plt.legend()
         
         plt.xlim([0.15,0.43])
         plt.ylim([0.61,1.03])
+
+        #plt.xlim([0.0,1.2])
+        #plt.ylim([0.2,1.5])
 
         plt.show()

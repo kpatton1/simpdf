@@ -2,15 +2,31 @@
 import numpy
 import matplotlib.pyplot as plt
 
-ranges = [5]
 #ranges = [0]
+#title = 'PS (nside 256)'
 
-data = numpy.load('data/fiducial/cov_8192_fiducial_fiducial_fullcov.npz')
+#ranges = [5]
+#title = 'PDF (nside 256)'
 
-dom_data = numpy.load('data/dcov_8192_delta_om_0.32_fiducial_fullcov.npz')
-ds8_data = numpy.load('data/dcov_8192_delta_s8_0.9_fiducial_fullcov.npz')
-dg_data = numpy.load('data/dcov_8192_fiducial_delta_g_1.1_fullcov.npz')
-dq_data = numpy.load('data/dcov_8192_fiducial_delta_q_1.1_fullcov.npz')
+#ranges = [3]
+#title = 'PDF (nside 1024)'
+#ranges = [10]
+#title = 'Moments (nside 1024)'
+
+ranges = [10]
+title = 'Moments (nside 1024)'
+
+data = numpy.load('data/fiducial/cov_8192_fiducial_fiducial_fullcovmoments.npz')
+
+dom_data = numpy.load('data/dcov_8192_delta_om_0.32_fiducial_fullcovmoments.npz')
+ds8_data = numpy.load('data/dcov_8192_delta_s8_0.9_fiducial_fullcovmoments.npz')
+dg_data = numpy.load('data/dcov_8192_fiducial_delta_g_1.1_fullcovmoments.npz')
+dq_data = numpy.load('data/dcov_8192_fiducial_delta_q_1.1_fullcovmoments.npz')
+
+delta_om = 0.32 - 0.29
+delta_s8 = 0.90 - 0.82
+delta_g = 1.1 - 1.0
+delta_q = 1.1 - 1.0
 
 mean = data['mean']
 cov = data['cov']
@@ -95,14 +111,20 @@ ds8_mean = ds8_mean[filter2]
 dg_mean = dg_mean[filter2]
 dq_mean = dq_mean[filter2]
 
+
+dom_mean = dom_mean / mean * 0.32 
+ds8_mean = ds8_mean / mean * 0.82
+dg_mean = dg_mean / mean * 1.0
+dq_mean = dq_mean / mean * 1.0
+
 sd = numpy.zeros(len(cov),dtype=numpy.float64)
 
 for i in range(len(cov)):
     sd[i] = numpy.sqrt(cov[i][i])
-    dom_mean[i] = dom_mean[i] / sd[i]
-    ds8_mean[i] = ds8_mean[i] / sd[i]
-    dq_mean[i] = dq_mean[i] / sd[i]
-    dg_mean[i] = dg_mean[i] / sd[i]
+    #dom_mean[i] = dom_mean[i] 
+    #ds8_mean[i] = ds8_mean[i] 
+    #dq_mean[i] = dq_mean[i] 
+    #dg_mean[i] = dg_mean[i]
 
 #for i in range(len(cov)):
 #    dom_mean[i] = dom_mean[i] / mean[i]
@@ -121,24 +143,30 @@ for i in range(len(cov)):
 #    dq_mean[i] = dq_mean[i] / dq_tot
 #    dg_mean[i] = dg_mean[i] / dg_tot
 
-plt.figure()
-#plt.errorbar(x, numpy.zeros(len(mean)), yerr=sd, color='black',label='mean sd')
-plt.plot(x, dom_mean, color='blue',label='delta om')
-plt.plot(x, ds8_mean, color='green',label='delta s8')
-plt.plot(x, dq_mean, color='red',label='delta q')
-plt.plot(x, dg_mean, color='orange',label='delta g')
-
-plt.legend(loc=0)
-
-plt.ylabel('dData/dParam / PDF bin sd')
-plt.xlabel('PDF bin')
-
-#plt.xscale('log')
 
 plt.figure()
-plt.errorbar(x, mean, yerr=sd)
-#plt.xscale('log')
+plt.plot(x, sd/mean, color='black',label='sd/moment')
+plt.scatter(x, dom_mean, color='green',label='delta om')
+plt.scatter(x, ds8_mean, color='blue',label='delta s8')
+plt.scatter(x, dq_mean, color='red',label='delta q')
+plt.scatter(x, -dq_mean, color='red',label='-delta q', marker='x')
+plt.scatter(x, dg_mean, color='orange',label='delta g')
+
+plt.legend(loc=4)
+
+plt.ylabel('d logMoment / d logQ')
+plt.xlabel('Moment n')
+plt.title(title)
+
 plt.yscale('log')
+plt.ylim([1e-2,1e2])
+
+#plt.xscale('log')
+
+#plt.figure()
+#plt.errorbar(x, mean, yerr=sd)
+#plt.xscale('log')
+#plt.yscale('log')
 
 plt.show()
 

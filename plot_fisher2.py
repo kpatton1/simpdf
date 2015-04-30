@@ -8,7 +8,7 @@ from matplotlib.patches import Ellipse
 #fisher = 'data/F_8192_fullcov_0.npz'
 #basetitle = 'PS (nside 256)'
 
-fisher = 'data/F_8192_fullcov_3.npz'
+fisher = 'data_lownoise/F_8192_fullcov_3.npz'
 basetitle = 'PDF (nside 1024)'
 
 #fisher = 'data/F_8192_fullcov_35.npz'

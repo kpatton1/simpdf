@@ -256,6 +256,61 @@ class AnalysisMoments:
 
         return moments
 
+class AnalysisLogPDF:
+
+    def __init__(self, map_size, divs, bins, bin_min, bin_max):
+
+        self.map_size = map_size
+        self.divs = divs
+        self.bins = bins
+        self.bin_min = bin_min
+        self.bin_max = bin_max
+
+    def x(self):
+        step = numpy.float32(self.bin_max - self.bin_min) / self.bins
+
+        x = numpy.arange(self.bins, dtype=numpy.float32)
+
+        x = (x + 0.5) * step
+
+        return x
+
+    def process_chunk(self, data):
+        
+        hist,bin_edges = numpy.histogram(data, bins=self.bins, range=(self.bin_min,self.bin_max))
+
+        return hist
+
+class AnalysisLogMoments:
+
+    def __init__(self, map_size, divs, scale, mmin=2, mmax=10):
+        self.map_size = map_size
+        self.divs = divs
+        self.scale = scale
+        self.mmin = mmin
+        self.mmax = mmax
+
+    def x(self):
+        x = numpy.arange(self.mmin, self.mmax)
+
+        return x
+
+    def process_chunk(self, data):
+
+        moment_data = data / self.scale
+        
+        moments = numpy.zeros(self.mmax - self.mmin, dtype=numpy.float32)
+
+        if self.mmin == 2:
+            temp = moment_data
+        else:
+            temp = numpy.pow(moment_data, self.mmin-1)
+
+        for i in range(0, self.mmax-self.mmin):
+            temp = temp * moment_data
+            moments[i] = numpy.mean(temp)
+
+        return moments
 
 class Simulation:
 
@@ -714,9 +769,12 @@ def run_pinocchio_simulation():
 
     return ret
 
-def healpixify(infile,outfile,nside):
+def healpixify(infile,outfile,survey):
 
     print 'Converting pinocchio output to healpix: ' + infile + ' -> ' + outfile
+
+    nside = survey.nside
+    zs = survey.zs
 
     npix = healpy.pixelfunc.nside2npix(nside)
 
@@ -754,6 +812,7 @@ def healpixify(infile,outfile,nside):
     for i in range(len(pix)):
         p = pix[i]
         m = mass[i]
+        zi = z[i]
         map_data[p] += m
 
     healpy.fitsfunc.write_map(outfile, map_data)
@@ -864,6 +923,8 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
     cov = fid['cov']
     
     r = fid['r']
+
+    info = fid['i']
     
     filter1 = []
     
@@ -871,20 +932,27 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
         r1 = r[n][0]
         r2 = r[n][1]
 
-        filter1.extend(range(r1,r2))
+        t = info[n][1]
+
+        if t == 'pdf':
+            for i in range(r1,r2):
+                if cov[i][i] != 0.0 and mean[i] >= 50.0/(200.0*384.0):
+                    filter1.append(i)
+        else:
+            filter1.extend(range(r1,r2))
+
+#    filter2 = []
+
+#    for i in range(len(mean)):
+#        if cov[i][i] != 0.0 and mean[i] >= 50.0/(200.0*384.0):
+#            filter2.append(i)
 
 #    cov = cov - numpy.outer(mean, mean)
 
     mean = mean[filter1]
     cov = cov[filter1][:,filter1]
 
-    filter2 = []
-
-    for i in range(len(mean)):
-        if cov[i][i] != 0.0 and mean[i] >= 50.0/(200.0*384.0):
-            filter2.append(i)
-
-    cov = cov[filter2][:,filter2]
+#    cov = cov[filter2][:,filter2]
 
     #e,v = numpy.linalg.eigh(cov)
 
@@ -923,7 +991,7 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
         diff = data['mean']
 
         diff = diff[filter1]
-        diff = diff[filter2]
+#        diff = diff[filter2]
         
         for i in range(len(diff)):
             diff[i] = diff[i] / sd[i]

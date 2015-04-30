@@ -5,19 +5,16 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.patches import Ellipse
 
-fisher0 = 'data/F_8192_fullcov_1357.npz'
+fisher = 'data_lownoise/F_8192_fullcov_0.npz'
+basetitle = 'PS vs PDF'
 
-fisher1 = 'data/F_8192_fullcov_35.npz'
-basetitle = 'PDF resolution dependence'
+fisher2 = 'data_lownoise/F_8192_fullcov_3.npz'
 
-fisher2 = 'data/F_8192_fullcov_1.npz'
+fisher3 = 'data_lownoise/F_8192_fullcov_5.npz'
 
-fisher3 = 'data/F_8192_fullcov_3.npz'
+fisher4 = 'data_lownoise/F_8192_smallbin_2.npz'
 
-fisher4 = 'data/F_8192_fullcov_5.npz'
-
-fisher5 = 'data/F_8192_fullcov_7.npz'
-
+fisher5 = 'data_lownoise/F_8192_smallbin_4.npz'
 
 
 #fisher = 'data/F_8192_fullcov_7.npz'
@@ -26,11 +23,8 @@ fisher5 = 'data/F_8192_fullcov_7.npz'
 #fisher = 'data/F_8192_fullcov_3.npz'
 #basetitle = 'PDF (nside 4096)'
 
-data = numpy.load(fisher0)
-F0 = data['F']
-
-data = numpy.load(fisher1)
-F1 = data['F']
+data = numpy.load(fisher)
+F = data['F']
 params = data['params']
 
 data = numpy.load(fisher2)
@@ -49,54 +43,54 @@ n = len(params)
 
 names = params
 
+print names
+
 centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0}
 
 #print F4
 
-F0[-2,-2] += 1/(0.1*0.1)
-F1[-2,-2] += 1/(0.1*0.1)
+F[-2,-2] += 1/(0.1*0.1)
 F2[-2,-2] += 1/(0.1*0.1)
 F3[-2,-2] += 1/(0.1*0.1)
 F4[-2,-2] += 1/(0.1*0.1)
 F5[-2,-2] += 1/(0.1*0.1)
-F0[-1,-1] += 1/(0.05*0.05)
-F1[-1,-1] += 1/(0.05*0.05)
+F[-1,-1] += 1/(0.05*0.05)
 F2[-1,-1] += 1/(0.05*0.05)
 F3[-1,-1] += 1/(0.05*0.05)
 F4[-1,-1] += 1/(0.05*0.05)
 F5[-1,-1] += 1/(0.05*0.05)
-F0[4,4] += 1/(0.0001*0.0001)
-F1[4,4] += 1/(0.0001*0.0001)
-F2[4,4] += 1/(0.0001*0.0001)
-F3[4,4] += 1/(0.0001*0.0001)
-F4[4,4] += 1/(0.0001*0.0001)
-F5[4,4] += 1/(0.0001*0.0001)
-F0[1,1] += 1/(0.0001*0.0001)
-F1[1,1] += 1/(0.0001*0.0001)
-F2[1,1] += 1/(0.0001*0.0001)
-F3[1,1] += 1/(0.0001*0.0001)
-F4[1,1] += 1/(0.0001*0.0001)
-F5[1,1] += 1/(0.0001*0.0001)
-F0[0,0] += 1/(0.1*0.1)
-F1[0,0] += 1/(0.1*0.1)
-F2[0,0] += 1/(0.1*0.1)
-F3[0,0] += 1/(0.1*0.1)
-F4[0,0] += 1/(0.1*0.1)
-F5[0,0] += 1/(0.1*0.1)
+#F[4,4] += 1/(0.0001*0.0001)
+#F2[4,4] += 1/(0.0001*0.0001)
+#F3[4,4] += 1/(0.0001*0.0001)
+#F4[4,4] += 1/(0.0001*0.0001)
+#F5[4,4] += 1/(0.0001*0.0001)
+#F[1,1] += 1/(0.000001*0.000001)
+#F2[1,1] += 1/(0.000001*0.000001)
+#F3[1,1] += 1/(0.000001*0.000001)
+#F4[1,1] += 1/(0.000001*0.000001)
+#F5[1,1] += 1/(0.000001*0.000001)
+#F[0,0] += 1/(0.1*0.1)
+#F2[0,0] += 1/(0.1*0.1)
+#F3[0,0] += 1/(0.1*0.1)
+#F4[0,0] += 1/(0.1*0.1)
+#F5[0,0] += 1/(0.1*0.1)
+
+
+
 
 def plot_fisher(F, basetitle, i,j, color, rescale=False):
     
     F_inv = numpy.linalg.inv(F)
-    
+
     ixgrid = numpy.ix_([j,i],[j,i])
-    
+
     subM = F_inv[ixgrid]
-    
+
     print subM
     
     sigma1 = numpy.sqrt(subM[0,0])
     sigma2 = numpy.sqrt(subM[1,1])
-    
+
     subF = numpy.linalg.inv(subM)
     
     l, v = numpy.linalg.eig(subM)
@@ -108,7 +102,7 @@ def plot_fisher(F, basetitle, i,j, color, rescale=False):
     print names[i] + ' sd: ' + str(sigma2)
     print 'area: ' + str(area)
     print 'fom: ' + str(1.0/area)
-    
+
     ax = plt.subplot(111)
     ax.set_title(basetitle + ': ' + names[j] + ' vs ' + names[i])
     
@@ -122,12 +116,11 @@ def plot_fisher(F, basetitle, i,j, color, rescale=False):
     ell.set_facecolor('none')
     ell.set_edgecolor(color)
     ax.add_artist(ell)
-    
+
     if rescale:
         plt.xlim([center_j-numpy.sqrt(subM[0,0])*1.2,center_j+numpy.sqrt(subM[0,0])*1.2])
         plt.ylim([center_i-numpy.sqrt(subM[1,1])*1.2,center_i+numpy.sqrt(subM[1,1])*1.2])
         plt.scatter([center_j],[center_i])
-
 
 for i in range(n):
     for j in range(i):
@@ -138,33 +131,30 @@ for i in range(n):
             continue
 
         handles = []
-        
-        plot_fisher(F0, basetitle, i, j, 'black', False)
-        plt.plot([],color='black',label='PDF 4096+1024+256+64')
 
-        plot_fisher(F1, basetitle, i,j,'blue',False)
+        plot_fisher(F, basetitle, i,j,'blue',True)
 
-        plt.plot([],color='blue',label='PDF 1024+256')
+        plt.plot([],color='blue',label='PS 256')
 
         plot_fisher(F2, basetitle, i, j, 'green',False)
 
-        plt.plot([],color='green',label='PDF 4096')
+        plt.plot([],color='green',label='PDF 1024')
+        
+        plot_fisher(F3,basetitle,i,j, 'black',False)
+        plt.plot([],color='black',label='PDF 256')
 
-        plot_fisher(F3, basetitle, i, j, 'red', False)
-            
-        plt.plot([],color='red',label='PDF 1024')
-
-        plot_fisher(F4, basetitle, i, j, 'purple', False)
-
-        plt.plot([],color='purple',label='PDF 256')
-
-        plot_fisher(F5, basetitle, i, j, 'orange', True)
-
-        plt.plot([],color='orange',label='PDF 64')
+        plot_fisher(F4,basetitle,i,j, 'red', False)
+        plt.plot([],color='red', label='PDF 1024 smallbin')
+        
+        plot_fisher(F5,basetitle,i,j, 'purple',False)
+        plt.plot([],color='purple',label='PDF 256 smallbin')
         
         plt.legend()
         
         plt.xlim([0.15,0.43])
         plt.ylim([0.61,1.03])
+
+        #plt.xlim([0.0,1.2])
+        #plt.ylim([0.2,1.5])
 
         plt.show()

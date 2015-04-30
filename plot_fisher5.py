@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.patches import Ellipse
 
-#fisher = 'data/F_8192_fullcov_0.npz'
-#basetitle = 'PS (nside 256)'
+fisher = 'data/F_8192_fullcov_0.npz'
+basetitle = 'PS (nside 256)'
 
-fisher = 'data/F_8192_fullcov_3.npz'
-basetitle = 'PDF (nside 1024)'
+#fisher = 'data/F_8192_fullcov_3.npz'
+#basetitle = 'PDF (nside 1024)'
 
 #fisher = 'data/F_8192_fullcov_5.npz'
 #basetitle = 'PDF (nside 256)'
@@ -23,6 +23,8 @@ params = data['params']
 n = len(params)
 
 names = params
+
+print names
 
 centers = {'h':0.69,'ok':0.0, 'w':-1.0, 's8':0.82, 'om':0.29, 'q':1.0, 'g':1.0}
 
