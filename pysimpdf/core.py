@@ -969,11 +969,11 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
     #shrink = 1e-16
     #shrink = 1e-28
 
-    shrink = 1e-13
+    #shrink = 1e-13
 #    shrink = 0.0
-    cov = cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
+    #cov = cov + shrink * numpy.identity(len(cov),dtype=numpy.float64)
 
-    cov_inv = numpy.linalg.inv(cov)
+    cov_inv = numpy.linalg.pinv(cov)
 
     #cov_inv_2 = numpy.dot(cov_inv, cov_inv)
 

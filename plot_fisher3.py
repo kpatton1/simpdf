@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 from matplotlib.patches import Ellipse
 
-fisher = 'data/F_8192_fullcov_0.npz'
+fisher = 'data/F_8192_fullcovmoments_0.npz'
 basetitle = 'PS vs PDF'
 
-fisher2 = 'data/F_8192_fullcov_3.npz'
+fisher2 = 'data/F_8192_fullcovmoments_3.npz'
 
-fisher3 = 'data/F_8192_fullcov_5.npz'
+fisher3 = 'data/F_8192_fullcovmoments_5.npz'
 
-fisher4 = 'data/F_8192_fullcov_035.npz'
+fisher4 = 'data/F_8192_fullcovmoments_035.npz'
 
-fisher5 = 'data/F_8192_fullcov_05.npz'
+fisher5 = 'data/F_8192_fullcovmoments_05.npz'
 
 fisher6 = 'data/F_8192_fullcovmoments_12.npz'
 
