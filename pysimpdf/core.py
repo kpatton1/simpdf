@@ -1103,6 +1103,12 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
         diffs.append(diff)
         
     F = numpy.zeros([n,n])
+    
+    N = 20.0*384.0
+    
+    bins = len(cov)
+    
+    factor = (N-bins-2.0) / (N-2.0)
 
     for i in range(n):
         for j in range(n):
@@ -1119,7 +1125,7 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
             '''
             d = numpy.dot(diffs[i], numpy.dot(cov_inv, diffs[j]))
 
-            F[i][j] = d
+            F[i][j] = factor * d
 
     F_inv = numpy.linalg.inv(F)
 
