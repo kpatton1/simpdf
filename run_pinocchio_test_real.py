@@ -30,9 +30,11 @@ print l
 #alist=[(1024,'pdf',200,-1.0,1.0), (256,'pdf',200,-1.0,1.0), (1024, 'moments', 1.0, 2, 10), (256, 'moments', 1.0, 2, 10), (1024,'logpdf',800,-20.0,20.0), (256,'logpdf',800,-20.0,20.0), (1024, 'logmoments', 1, 10), (256, 'logmoments', 1, 10)]
 #aname='test_simple'
 
-alist=[(256,'ps',768), (256,'logps',768)]
-aname='test_ps'
+#alist=[(256,'ps',768), (256,'logps',768)]
+#aname='test_ps'
 
+alist=[(1024,'pdf',50, -1.0,1.0),(1024,'pdf',100, -1.0,1.0),(1024,'pdf',150, -1.0,1.0),(1024,'pdf',200, -1.0,1.0), (1024,'pdf',250, -1.0,1.0), (1024,'pdf',300, -1.0,1.0), (1024,'pdf',350, -1.0,1.0), (1024,'pdf',400, -1.0,1.0), (1024,'pdf',450, -1.0,1.0), (1024,'pdf',500, -1.0,1.0), (1024,'pdf',550, -1.0,1.0), (1024,'pdf',600, -1.0,1.0), (1024,'pdf',650, -1.0,1.0), (1024,'pdf',700, -1.0,1.0), (1024,'pdf',750, -1.0,1.0), (1024,'pdf',800, -1.0,1.0)]
+aname='test_pdf1024'
 
 
 for i in range(len(alist)):
@@ -82,6 +84,14 @@ fs.calc_fisher(ts,[4])
 fs.calc_fisher(ts,[5])
 fs.calc_fisher(ts,[6])
 fs.calc_fisher(ts,[7])
+fs.calc_fisher(ts,[8])
+fs.calc_fisher(ts,[9])
+fs.calc_fisher(ts,[10])
+fs.calc_fisher(ts,[11])
+fs.calc_fisher(ts,[12])
+fs.calc_fisher(ts,[13])
+fs.calc_fisher(ts,[14])
+fs.calc_fisher(ts,[15])
 
 #fs.calc_fisher(ts,[0])
 #fs.calc_fisher(ts,[3])
