@@ -1,9 +1,9 @@
 
 PINOCCHIO_CORE_SURVEY_DEFAULT_NAME='test'
-PINOCCHIO_CORE_SURVEY_DEFAULT_NSIDE=8192
+PINOCCHIO_CORE_SURVEY_DEFAULT_NSIDE=1024
 PINOCCHIO_CORE_SURVEY_DEFAULT_SEED=0
 PINOCCHIO_CORE_SURVEY_DEFAULT_E=0.30
-PINOCCHIO_CORE_SURVEY_DEFAULT_NG=10
+PINOCCHIO_CORE_SURVEY_DEFAULT_NG=5
 PINOCCHIO_CORE_SURVEY_DEFAULT_ZL=0.4
 PINOCCHIO_CORE_SURVEY_DEFAULT_ZS=0.8
 PINOCCHIO_CORE_SURVEY_DEFAULT_Q=1.0
@@ -98,6 +98,40 @@ class Analysis:
             
                 self.alist.append(a_moments)
 
+            elif t == 'logpdf':
+                map_size = n
+
+                bins = a[2]
+                bin_min = a[3]
+                bin_max = a[4]
+
+                a_logpdf = AnalysisLogPDF(n, self.divs, bins, bin_min, bin_max)
+                a_logpdf.info = a
+
+                self.alist.append(a_logpdf)
+
+            elif t == 'logmoments':
+                map_size = n
+
+                mmin = a[2]
+                mmax = a[3]
+
+                a_logmoments = AnalysisLogMoments(n, self.divs, mmin, mmax)
+                a_logmoments.info = a
+
+                self.alist.append(a_logmoments)
+
+            elif t == 'logps':
+                map_size = n
+                
+                lmin = 0
+                lmax = 3 * map_size
+                
+                a_logps = AnalysisPS(n, self.divs, lmin, lmax)
+                a_logps.info = a
+
+                self.alist.append(a_logps)
+
             else:
                 print 'Error! Unknown analysis type: ' + str(t)
                 print a
@@ -135,7 +169,7 @@ class Analysis:
             x.extend(a_x)
             
             if map_size not in scaled_maps.keys():
-                scaled_maps[map_size] = healpy.pixelfunc.ud_grade(map_data_raw,map_size,power=-2,order_in='NESTED',order_out='NESTED',dtype=numpy.float64)
+                scaled_maps[map_size] = healpy.pixelfunc.ud_grade(map_data_raw,map_size,power=0,order_in='NESTED',order_out='NESTED',dtype=numpy.float64)
 
         for n in range(divs):
         
@@ -215,7 +249,7 @@ class AnalysisPDF:
 
         x = numpy.arange(self.bins, dtype=numpy.float32)
 
-        x = (x + 0.5) * step
+        x = self.bin_min + (x + 0.5) * step
 
         return x
 
@@ -271,22 +305,23 @@ class AnalysisLogPDF:
 
         x = numpy.arange(self.bins, dtype=numpy.float32)
 
-        x = (x + 0.5) * step
+        x = self.bin_min + (x + 0.5) * step
 
         return x
 
     def process_chunk(self, data):
+
+        data_log = numpy.log(data)
         
-        hist,bin_edges = numpy.histogram(data, bins=self.bins, range=(self.bin_min,self.bin_max))
+        hist,bin_edges = numpy.histogram(data_log, bins=self.bins, range=(self.bin_min,self.bin_max))
 
         return hist
 
 class AnalysisLogMoments:
 
-    def __init__(self, map_size, divs, scale, mmin=2, mmax=10):
+    def __init__(self, map_size, divs, mmin=1, mmax=10):
         self.map_size = map_size
         self.divs = divs
-        self.scale = scale
         self.mmin = mmin
         self.mmax = mmax
 
@@ -297,20 +332,72 @@ class AnalysisLogMoments:
 
     def process_chunk(self, data):
 
-        moment_data = data / self.scale
+        moment_data = numpy.log(data)
         
         moments = numpy.zeros(self.mmax - self.mmin, dtype=numpy.float32)
 
-        if self.mmin == 2:
+        mean = numpy.nanmean(moment_data)
+
+        moment_data = moment_data - mean
+
+        if self.mmin == 1:
+            temp = numpy.ones(len(moment_data), dtype=numpy.float32)
+        elif self.mmin == 2:
             temp = moment_data
         else:
             temp = numpy.pow(moment_data, self.mmin-1)
 
         for i in range(0, self.mmax-self.mmin):
             temp = temp * moment_data
-            moments[i] = numpy.mean(temp)
+            moments[i] = numpy.nanmean(temp)
+
+        if self.mmin == 1:
+            moments[0] = mean
 
         return moments
+
+class AnalysisLogPS:
+
+    def __init__(self, map_size, divs, lmin=0, lmax=-1):
+        
+        if lmax < 0 or lmax > 3 * map_size:
+            lmax = 3 * map_size
+
+        if lmin > lmax:
+            lmin = lmax
+
+        self.map_size = map_size
+        self.divs = divs
+        self.lmin = lmin
+        self.lmax = lmax
+
+        self.bins = lmax - lmin
+
+    def x(self):
+
+        x = numpy.arange(self.lmin,self.lmax)
+
+        return x
+
+    def process_chunk(self, data):
+
+        npix = healpy.pixelfunc.nside2npix(self.map_size)
+
+        ps_data = numpy.zeros(npix, dtype=numpy.float32)
+
+        map_data = numpy.log(data)
+
+        map_data = map_data - numpy.nanmean(map_data)
+
+        map_data = numpy.nan_to_num(map_data)
+
+        ps_data[0:npix/self.divs] = map_data
+
+        ps_data_n2r = healpy.pixelfunc.reorder(ps_data, n2r = True)
+
+        cls = healpy.sphtfunc.anafast(ps_data_n2r)
+
+        return cls[self.lmin:self.lmax]
 
 class Simulation:
 
@@ -501,7 +588,7 @@ class Simulation:
             healpix_output = self.healpix_output(i)
 
             if not os.path.exists(healpix_output):
-                healpixify(pinocchio_output,healpix_output,self.survey.nside)
+                healpixify(pinocchio_output,healpix_output,self.cosmo,self.survey)
                 
             if not os.path.exists(healpix_output):
                 print 'Healpix error! could not generate: ' + healpix_output
@@ -769,7 +856,7 @@ def run_pinocchio_simulation():
 
     return ret
 
-def healpixify(infile,outfile,survey):
+def healpixify(infile,outfile,cosmo,survey):
 
     print 'Converting pinocchio output to healpix: ' + infile + ' -> ' + outfile
 
@@ -809,11 +896,26 @@ def healpixify(infile,outfile,survey):
     
     pix = healpy.pixelfunc.ang2pix(nside, theta_rad, phi_rad, nest=True)
 
+    e_crit0 = cosmo.c * cosmo.c / (4.0 * numpy.pi * cosmo.G)
+    zs = survey.zs
+    ds = cosmo.Da(zs)
+
+    pixelarea_rad = healpy.pixelfunc.nside2pixarea(nside)
+
     for i in range(len(pix)):
         p = pix[i]
         m = mass[i]
         zi = z[i]
-        map_data[p] += m
+
+        if zi >= zs:
+            continue
+
+        dl = cosmo.Da(zi)
+        dls = cosmo.Da_rel(zi,zs)
+
+        e_crit = e_crit0 * pixelarea_rad * ds * dl / dls # e_crit * pixelarea_rad * dl^2 -> Msolar
+
+        map_data[p] += m / e_crit
 
     healpy.fitsfunc.write_map(outfile, map_data)
 
@@ -823,18 +925,18 @@ def add_noise(infile,outfile,cosmo,survey):
     
     sigma_e = survey.e
 
-    zl = survey.zl
-    zs = survey.zs
+    #zl = survey.zl
+    #zs = survey.zs
 
-    dl = cosmo.Da(zl)
-    ds = cosmo.Da(zs)
-    dls = cosmo.Da_rel(zl,zs)
+    #dl = cosmo.Da(zl)
+    #ds = cosmo.Da(zs)
+    #dls = cosmo.Da_rel(zl,zs)
 
-    e_crit = cosmo.c * cosmo.c * ds / (4.0 * numpy.pi * cosmo.G * dls * dl) # [Msolar / Mpc^2]
+    #e_crit = cosmo.c * cosmo.c * ds / (4.0 * numpy.pi * cosmo.G * dls * dl) # [Msolar / Mpc^2]
 
-    e_crit = e_crit * dl * dl * numpy.pi * numpy.pi / 60.0 / 60.0 / 180.0 / 180.0 # [Msolar / arcmin^2]
+    #e_crit = e_crit * dl * dl * numpy.pi * numpy.pi / 60.0 / 60.0 / 180.0 / 180.0 # [Msolar / arcmin^2]
 
-    print '  e_crit: ' + str(e_crit)
+    #print '  e_crit: ' + str(e_crit)
     
     n_gal = survey.ng
 
@@ -844,7 +946,9 @@ def add_noise(infile,outfile,cosmo,survey):
 
     pixelarea = healpy.pixelfunc.nside2pixarea(nside) * 180.0 / numpy.pi * 180.0 / numpy.pi * 60.0 * 60.0
     
-    sigma = survey.q * survey.e * e_crit / 2.0 * pixelarea / numpy.sqrt(2.0 * n_gal * pixelarea)
+    #sigma = survey.q * survey.e * e_crit / 2.0 * pixelarea / numpy.sqrt(2.0 * n_gal * pixelarea)
+    
+    sigma = survey.q * survey.e / 2.0 / numpy.sqrt(2.0 * n_gal * pixelarea)
         
     map_data = survey.g * (map_data + sigma * numpy.random.randn(12*nside*nside))
     
@@ -934,9 +1038,9 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
 
         t = info[n][1]
 
-        if t == 'pdf':
+        if t == 'pdf' or t == 'logpdf':
             for i in range(r1,r2):
-                if cov[i][i] != 0.0 and mean[i] >= 50.0/(200.0*384.0):
+                if cov[i][i] != 0.0 and mean[i] >= 10.0/(20.0*384.0):
                     filter1.append(i)
         else:
             filter1.extend(range(r1,r2))

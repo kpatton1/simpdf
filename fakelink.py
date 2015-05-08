@@ -2,7 +2,7 @@
 import os
 
 sourcedir=os.path.abspath('data')
-linkdir='data_lownoise'
+linkdir='data_real'
 
 subdir_fid = 'fiducial'
 
@@ -28,7 +28,8 @@ for i in range(1,fiducial_sims+1):
     pinocchio = 'pinocchio.' + subdir_fid + '_r' + str(i) + '.plc.out'
     healpix = 'healpix_8192_' + subdir_fid + '_r' + str(i) + '.fits'
 
-    files = [parameters, outputs, pinocchio, healpix]
+    #files = [parameters, outputs, pinocchio, healpix]
+    files = [parameters, outputs, pinocchio]
     
     for f in files:
         if not os.path.exists(linkdir + '/' + rundir + '/' + f):
@@ -50,7 +51,8 @@ for i in range(1,delta_sims+1):
         pinocchio = 'pinocchio.' + subdir_delta + '_r' + str(i) + '.plc.out'
         healpix = 'healpix_8192_' + subdir_delta + '_r' + str(i) + '.fits'
         
-        files = [parameters, outputs, pinocchio, healpix]
+        #files = [parameters, outputs, pinocchio, healpix]
+        files = [parameters, outputs, pinocchio]
     
         for f in files:
             if not os.path.exists(linkdir + '/' + rundir + '/' + f):
