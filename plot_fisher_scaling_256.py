@@ -80,6 +80,11 @@ for F in F_list:
 
 plt.xlim([0,5100])
 
+plt.xlabel('bins')
+plt.ylabel('fom')
+
+plt.title('PDF 256 resolution scaling')
+
 plt.scatter(x,y)
 plt.show()
 

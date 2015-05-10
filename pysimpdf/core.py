@@ -1040,7 +1040,7 @@ def calc_fisher(fid_cov_output, dcov_outs, params, fisher_out, ranges):
 
         if t == 'pdf' or t == 'logpdf':
             for i in range(r1,r2):
-                if cov[i][i] != 0.0 and mean[i] >= 10.0/(20.0*384.0):
+                if cov[i][i] != 0.0 and mean[i] >= 100.0/(20.0*384.0):
                     filter1.append(i)
         else:
             filter1.extend(range(r1,r2))

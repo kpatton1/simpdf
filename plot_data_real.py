@@ -2,7 +2,7 @@
 import numpy
 import matplotlib.pyplot as plt
 
-infile = 'data_real/fiducial/cov_1024_fiducial_fiducial_test_simple.npz'
+infile = 'data_real/fiducial/cov_1024_fiducial_fiducial_test_pdf256.npz'
 
 data = numpy.load(infile)
 
@@ -76,8 +76,10 @@ for i in range(len(r)):
         plt.ylabel("N")
         #x[filter] = x[filter] - 1.0e16
         #plt.xlim(-1.0e16,1.0e16)
+        plt.ylim([1e-2,5.0e2])
+        plt.xlim(-0.03, 0.13)
         plt.yscale('log')
-        filter2 = (mean[filter] >= 10.0/(20.0*384.0))
+        filter2 = (mean[filter] >= 100.0/(20.0*384.0))
         plt.errorbar(x[filter][filter2], mean[filter][filter2], yerr=std[filter][filter2], fmt='.', color='blue')
         plt.errorbar(x[filter][~filter2], mean[filter][~filter2], yerr=std[filter][~filter2], fmt='.',color='red')
     elif t == 'logpdf':

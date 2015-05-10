@@ -7,7 +7,7 @@ from matplotlib.patches import Ellipse
 
 N = 20.0 * 384.0
 
-fisher = 'data_real/F_1024_test_simple_5.npz'
+fisher = 'data_real/F_1024_test_pdf256_1.npz'
 basetitle = 'PDF 256 scaling'
 
 fisher2 = 'data_real/F_1024_test_pdf256_2.npz'
